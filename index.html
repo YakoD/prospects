@@ -4,343 +4,736 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prospects — TailTrade</title>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAuEMHHm6MPbbcFMsC0p4UvFlfypnefR88",
+    authDomain: "prospects-e7b0b.firebaseapp.com",
+    projectId: "prospects-e7b0b",
+    storageBucket: "prospects-e7b0b.firebasestorage.app",
+    messagingSenderId: "774391289774",
+    appId: "1:774391289774:web:0e0ad96643a1bdd2f21a3f"
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
+
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0a0a0a; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a0a; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
 
-  header { padding: 20px 32px; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; }
-  .header-left h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-  .header-left p { font-size: 11px; color: #444; margin-top: 2px; }
+/* ── Login ─────────────────────────────── */
+#loginScreen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.login-card {
+  background: #111; border: 1px solid #1e1e1e; border-radius: 16px;
+  padding: 40px 36px; width: 100%; max-width: 380px;
+}
+.login-logo { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.login-sub  { font-size: 12px; color: #444; margin-bottom: 32px; }
 
-  .stats { display: flex; gap: 10px; }
-  .stat { background: #111; border: 1px solid #1a1a1a; border-radius: 8px; padding: 8px 14px; text-align: center; min-width: 64px; }
-  .stat-num { font-size: 20px; font-weight: 700; }
-  .stat-num.hot { color: #ff4d4d; }
-  .stat-num.warm { color: #ff9900; }
-  .stat-num.lukewarm { color: #4da6ff; }
-  .stat-num.grey { color: #555; }
-  .stat-label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
+.btn-google {
+  width: 100%; background: #fff; color: #111; border: none; border-radius: 8px;
+  padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px;
+}
+.btn-google:hover { background: #f0f0f0; }
+.btn-google svg { flex-shrink: 0; }
 
-  .main { max-width: 880px; margin: 0 auto; padding: 24px 20px; }
+.divider { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.divider span { font-size: 11px; color: #333; }
+.divider:before, .divider:after { content:''; flex:1; height:1px; background:#1e1e1e; }
 
-  /* API Key bar */
-  .settings-bar { background: #111; border: 1px solid #1a1a1a; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
-  .settings-bar label { font-size: 11px; color: #444; white-space: nowrap; }
-  .settings-bar input { flex: 1; background: #0d0d0d; border: 1px solid #222; border-radius: 6px; padding: 7px 11px; color: #e0e0e0; font-size: 12px; outline: none; }
-  .settings-bar input:focus { border-color: #333; }
-  .btn-sm { background: #1a1a1a; border: 1px solid #2a2a2a; color: #aaa; border-radius: 6px; padding: 7px 13px; cursor: pointer; font-size: 12px; white-space: nowrap; }
-  .btn-sm:hover { background: #222; color: #ccc; }
+.login-field { margin-bottom: 10px; }
+.login-field label { font-size: 11px; color: #555; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.7px; }
+.login-field input { width: 100%; background: #0d0d0d; border: 1px solid #222; border-radius: 8px; padding: 10px 12px; color: #e0e0e0; font-size: 13px; outline: none; }
+.login-field input:focus { border-color: #333; }
 
-  /* Tabs */
-  .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: #111; border: 1px solid #1a1a1a; border-radius: 8px; padding: 4px; width: fit-content; }
-  .tab { padding: 7px 18px; border-radius: 6px; font-size: 13px; cursor: pointer; color: #555; border: none; background: none; }
-  .tab.active { background: #1e1e1e; color: #e0e0e0; }
+.btn-login {
+  width: 100%; background: #1e1e1e; color: #ccc; border: 1px solid #2a2a2a;
+  border-radius: 8px; padding: 11px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 4px;
+}
+.btn-login:hover { background: #252525; }
+.login-toggle { font-size: 12px; color: #444; text-align: center; margin-top: 14px; cursor: pointer; }
+.login-toggle span { color: #888; text-decoration: underline; }
+.login-toggle span:hover { color: #ccc; }
+.login-error { font-size: 12px; color: #ff6b6b; margin-top: 10px; text-align: center; min-height: 18px; }
 
-  /* Add section */
-  .add-section { background: #111; border: 1px solid #1a1a1a; border-radius: 10px; padding: 18px; margin-bottom: 24px; }
-  .add-section h2 { font-size: 12px; color: #555; margin-bottom: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
-  textarea { width: 100%; background: #0d0d0d; border: 1px solid #222; border-radius: 8px; padding: 11px; color: #e0e0e0; font-size: 13px; resize: vertical; min-height: 100px; outline: none; line-height: 1.5; font-family: inherit; }
-  textarea:focus { border-color: #333; }
-  textarea::placeholder { color: #333; }
-  .add-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
-  select { background: #0d0d0d; border: 1px solid #222; border-radius: 6px; padding: 7px 11px; color: #e0e0e0; font-size: 13px; outline: none; cursor: pointer; }
-  .btn-primary { background: #e0e0e0; color: #000; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .btn-primary:hover { background: #fff; }
-  .btn-primary:disabled { background: #2a2a2a; color: #555; cursor: not-allowed; }
+/* ── Setup Overlay ─────────────────────── */
+#setupOverlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.setup-card {
+  background: #111; border: 1px solid #2a2a2a; border-radius: 16px;
+  padding: 36px; max-width: 560px; width: 100%;
+}
+.setup-card h2 { font-size: 18px; margin-bottom: 8px; }
+.setup-card p  { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.6; }
+.setup-steps { margin-bottom: 20px; }
+.setup-step { display: flex; gap: 12px; margin-bottom: 10px; }
+.step-num { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+.setup-step p { font-size: 13px; color: #aaa; line-height: 1.5; }
+.setup-step code { background: #0d0d0d; border: 1px solid #222; border-radius: 4px; padding: 1px 5px; font-size: 11px; color: #888; }
+.setup-card textarea { width: 100%; background: #0d0d0d; border: 1px solid #222; border-radius: 8px; padding: 10px 12px; color: #aaa; font-size: 12px; font-family: monospace; resize: vertical; min-height: 130px; outline: none; margin-bottom: 12px; }
+.setup-card textarea:focus { border-color: #333; }
+.btn-setup { background: #e0e0e0; color: #000; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-setup:hover { background: #fff; }
+.setup-error { font-size: 12px; color: #ff6b6b; margin-top: 8px; }
 
-  /* CSV section */
-  .csv-section { background: #111; border: 1px solid #1a1a1a; border-radius: 10px; padding: 18px; margin-bottom: 24px; }
-  .csv-section h2 { font-size: 12px; color: #555; margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
-  .csv-section p { font-size: 12px; color: #444; margin-bottom: 12px; line-height: 1.5; }
-  .csv-section code { background: #0d0d0d; border: 1px solid #222; border-radius: 4px; padding: 2px 6px; font-size: 11px; color: #888; }
-  .csv-drop { border: 1px dashed #2a2a2a; border-radius: 8px; padding: 28px; text-align: center; cursor: pointer; transition: border-color 0.15s; }
-  .csv-drop:hover, .csv-drop.drag { border-color: #555; }
-  .csv-drop p { font-size: 13px; color: #444; }
-  .csv-drop span { font-size: 11px; color: #333; display: block; margin-top: 4px; }
-  .csv-drop input[type=file] { display: none; }
-  .csv-progress { margin-top: 14px; display: none; }
-  .progress-bar-bg { background: #1a1a1a; border-radius: 4px; height: 4px; width: 100%; margin-top: 8px; }
-  .progress-bar { background: #e0e0e0; border-radius: 4px; height: 4px; width: 0%; transition: width 0.3s; }
-  .csv-status { font-size: 12px; color: #555; margin-top: 6px; }
+/* ── App Header ────────────────────────── */
+header {
+  padding: 16px 28px; border-bottom: 1px solid #141414;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.header-left h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.header-left p  { font-size: 11px; color: #383838; margin-top: 1px; }
+.header-right { display: flex; align-items: center; gap: 14px; }
 
-  /* Filters & search */
-  .toolbar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
-  .search-input { background: #111; border: 1px solid #1a1a1a; border-radius: 8px; padding: 8px 14px; color: #e0e0e0; font-size: 13px; outline: none; flex: 1; min-width: 180px; }
-  .search-input:focus { border-color: #2a2a2a; }
-  .search-input::placeholder { color: #333; }
-  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
-  .filter-btn { background: #111; border: 1px solid #1a1a1a; color: #444; border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
-  .filter-btn:hover, .filter-btn.active { background: #1a1a1a; border-color: #333; color: #ccc; }
+.stats { display: flex; gap: 8px; }
+.stat { background: #0d0d0d; border: 1px solid #141414; border-radius: 8px; padding: 7px 12px; text-align: center; min-width: 58px; }
+.stat-num { font-size: 18px; font-weight: 700; }
+.stat-num.hot      { color: #ff4d4d; }
+.stat-num.warm     { color: #ff9900; }
+.stat-num.lukewarm { color: #4da6ff; }
+.stat-num.grey     { color: #3a3a3a; }
+.stat-label { font-size: 9px; color: #383838; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
 
-  /* Cards */
-  .prospect-list { display: flex; flex-direction: column; gap: 12px; }
-  .prospect-card { background: #111; border: 1px solid #1a1a1a; border-radius: 12px; padding: 18px; position: relative; }
-  .prospect-card:hover { border-color: #222; }
-  .prospect-card.dmd { opacity: 0.45; }
+.user-info { display: flex; align-items: center; gap: 8px; }
+.user-avatar { width: 30px; height: 30px; border-radius: 50%; background: #1e1e1e; border: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #888; overflow: hidden; }
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-email { font-size: 11px; color: #444; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-logout { background: transparent; border: 1px solid #1e1e1e; color: #444; border-radius: 6px; padding: 5px 11px; font-size: 11px; cursor: pointer; }
+.btn-logout:hover { border-color: #2a2a2a; color: #888; }
 
-  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
-  .card-name { font-size: 16px; font-weight: 700; }
-  .card-handle { font-size: 12px; color: #4da6ff; margin-left: 6px; font-weight: 400; }
-  .card-handle a { color: inherit; text-decoration: none; }
-  .card-handle a:hover { text-decoration: underline; }
+/* ── Main layout ───────────────────────── */
+.app-body { display: flex; height: calc(100vh - 65px); overflow: hidden; }
 
-  .badge { font-size: 10px; font-weight: 700; border-radius: 5px; padding: 3px 9px; letter-spacing: 0.5px; flex-shrink: 0; }
-  .badge.HOT { background: #2d0a0a; color: #ff4d4d; border: 1px solid #4a1010; }
-  .badge.WARM { background: #2d1a00; color: #ff9900; border: 1px solid #4a2e00; }
-  .badge.LUKEWARM { background: #0a1828; color: #4da6ff; border: 1px solid #0e2a44; }
+/* Left panel — Add */
+.panel-add {
+  width: 360px; flex-shrink: 0; border-right: 1px solid #141414;
+  overflow-y: auto; padding: 20px;
+}
+.panel-add::-webkit-scrollbar { width: 4px; }
+.panel-add::-webkit-scrollbar-thumb { background: #1e1e1e; border-radius: 4px; }
 
-  .card-meta { font-size: 12px; color: #444; margin-bottom: 5px; }
-  .card-interests { margin-bottom: 8px; }
-  .card-interests span.label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 0.8px; margin-right: 5px; }
-  .tag { display: inline-block; background: #161616; border: 1px solid #222; border-radius: 4px; padding: 2px 7px; font-size: 11px; color: #aaa; margin-right: 4px; margin-bottom: 2px; }
-  .tag.type-crypto { color: #c084fc; border-color: #3a1a5a; background: #1a0d2a; }
-  .tag.type-sports { color: #4ade80; border-color: #1a4a2a; background: #0d1f14; }
-  .tag.type-polymarket { color: #f59e0b; border-color: #4a3010; background: #1f1508; }
+/* Right panel — History */
+.panel-history { flex: 1; overflow-y: auto; padding: 20px; }
+.panel-history::-webkit-scrollbar { width: 4px; }
+.panel-history::-webkit-scrollbar-thumb { background: #1e1e1e; border-radius: 4px; }
 
-  .card-bio { font-size: 12px; color: #555; font-style: italic; margin-bottom: 5px; line-height: 1.4; }
-  .card-reason { font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; }
+.panel-title { font-size: 11px; color: #383838; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; font-weight: 600; }
 
-  .pitch-label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-  .pitch-type { font-size: 10px; padding: 2px 7px; border-radius: 4px; border: 1px solid #2a2a2a; color: #555; }
-  .pitch-type.crypto { color: #c084fc; border-color: #3a1a5a; }
-  .pitch-type.bettor { color: #4ade80; border-color: #1a4a2a; }
+/* ── API Key bar ───────────────────────── */
+.apikey-bar { background: #0d0d0d; border: 1px solid #141414; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+.apikey-bar label { font-size: 10px; color: #383838; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 6px; }
+.apikey-row { display: flex; gap: 8px; align-items: center; }
+.apikey-row input { flex: 1; background: #111; border: 1px solid #1e1e1e; border-radius: 6px; padding: 7px 10px; color: #e0e0e0; font-size: 12px; outline: none; }
+.apikey-row input:focus { border-color: #2a2a2a; }
+.apikey-saved { flex: 1; font-size: 12px; color: #444; font-family: monospace; padding: 7px 0; }
+.btn-xs { background: #141414; border: 1px solid #1e1e1e; color: #888; border-radius: 6px; padding: 6px 11px; cursor: pointer; font-size: 11px; white-space: nowrap; }
+.btn-xs:hover { background: #1a1a1a; }
 
-  .outreach-box { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 8px; padding: 13px; font-size: 13px; line-height: 1.65; color: #ccc; margin-bottom: 12px; }
+/* ── Sub-tabs ──────────────────────────── */
+.subtabs { display: flex; gap: 2px; background: #0d0d0d; border: 1px solid #141414; border-radius: 7px; padding: 3px; margin-bottom: 16px; }
+.subtab { flex: 1; padding: 6px; border-radius: 5px; font-size: 12px; cursor: pointer; color: #444; border: none; background: none; text-align: center; }
+.subtab.active { background: #1a1a1a; color: #ccc; }
 
-  .card-actions { display: flex; gap: 8px; align-items: center; }
-  .btn-copy { background: #1a1a1a; border: 1px solid #2a2a2a; color: #aaa; border-radius: 6px; padding: 6px 13px; font-size: 12px; cursor: pointer; }
-  .btn-copy:hover { background: #222; }
-  .btn-copy.copied { color: #4ade80; border-color: #1a4a2a; }
-  .btn-dmd { background: transparent; border: 1px solid #1e1e1e; color: #444; border-radius: 6px; padding: 6px 13px; font-size: 12px; cursor: pointer; }
-  .btn-dmd:hover { border-color: #2a2a2a; color: #777; }
-  .btn-dmd.done { color: #4ade80; border-color: #1a4a2a; }
-  .btn-delete { background: transparent; border: none; color: #2a2a2a; font-size: 18px; cursor: pointer; margin-left: auto; padding: 2px 8px; border-radius: 4px; line-height: 1; }
-  .btn-delete:hover { color: #ff4d4d; background: #1a0808; }
+/* ── Form fields ───────────────────────── */
+.field { margin-bottom: 10px; }
+.field label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 0.7px; display: block; margin-bottom: 5px; }
+.field input, .field textarea, .field select {
+  width: 100%; background: #0d0d0d; border: 1px solid #141414; border-radius: 7px;
+  padding: 9px 11px; color: #e0e0e0; font-size: 13px; outline: none; font-family: inherit;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: #222; }
+.field textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.field input::placeholder, .field textarea::placeholder { color: #272727; }
+.field-row { display: flex; gap: 8px; }
+.field-row .field { flex: 1; }
 
-  .target-pill { font-size: 10px; color: #444; background: #161616; border: 1px solid #1e1e1e; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
+.btn-analyze {
+  width: 100%; background: #e0e0e0; color: #000; border: none; border-radius: 8px;
+  padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 4px;
+}
+.btn-analyze:hover { background: #fff; }
+.btn-analyze:disabled { background: #1a1a1a; color: #444; cursor: not-allowed; }
 
-  .empty-state { text-align: center; padding: 60px 20px; color: #2a2a2a; }
-  .empty-state p { font-size: 14px; }
+.dup-warning { font-size: 11px; color: #ff9900; background: #1f1500; border: 1px solid #3a2800; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; display: none; }
 
-  /* Loading overlay */
-  .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 100; }
-  .loading-box { background: #111; border: 1px solid #222; border-radius: 12px; padding: 26px 34px; text-align: center; min-width: 220px; }
-  .spinner { width: 26px; height: 26px; border: 2px solid #222; border-top-color: #e0e0e0; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-box p { color: #666; font-size: 13px; }
+/* ── CSV ───────────────────────────────── */
+.csv-desc { font-size: 12px; color: #383838; line-height: 1.6; margin-bottom: 12px; }
+.csv-desc code { background: #0d0d0d; border: 1px solid #141414; border-radius: 4px; padding: 1px 5px; font-size: 11px; color: #555; }
+.csv-drop {
+  border: 1px dashed #1e1e1e; border-radius: 8px; padding: 26px; text-align: center;
+  cursor: pointer; transition: border-color 0.15s; margin-bottom: 10px;
+}
+.csv-drop:hover, .csv-drop.drag { border-color: #444; }
+.csv-drop p { font-size: 13px; color: #383838; }
+.csv-drop span { font-size: 11px; color: #272727; display: block; margin-top: 3px; }
+.csv-drop input[type=file] { display: none; }
 
-  .toast { position: fixed; bottom: 22px; right: 22px; background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; padding: 11px 16px; font-size: 13px; color: #ccc; z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-width: 280px; }
-  .toast.show { opacity: 1; }
-  .toast.error { border-color: #4a1010; color: #ff8080; }
+.progress-wrap { display: none; margin-top: 12px; }
+.progress-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.progress-label span { font-size: 11px; color: #444; }
+.progress-bg { background: #141414; border-radius: 3px; height: 3px; }
+.progress-fill { background: #e0e0e0; border-radius: 3px; height: 3px; width: 0%; transition: width 0.3s; }
+
+/* ── Toolbar (history) ─────────────────── */
+.toolbar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.search-inp {
+  flex: 1; min-width: 160px; background: #0d0d0d; border: 1px solid #141414;
+  border-radius: 8px; padding: 8px 13px; color: #e0e0e0; font-size: 13px; outline: none;
+}
+.search-inp:focus { border-color: #1e1e1e; }
+.search-inp::placeholder { color: #272727; }
+.filter-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+.filter-btn { background: #0d0d0d; border: 1px solid #141414; color: #383838; border-radius: 6px; padding: 5px 11px; font-size: 11px; cursor: pointer; }
+.filter-btn:hover, .filter-btn.active { background: #141414; border-color: #222; color: #bbb; }
+
+/* ── Cards ─────────────────────────────── */
+.cards { display: flex; flex-direction: column; gap: 10px; }
+.card { background: #0d0d0d; border: 1px solid #141414; border-radius: 12px; padding: 16px; }
+.card:hover { border-color: #1a1a1a; }
+.card.dmd { opacity: 0.4; }
+
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+.card-name-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; }
+.card-name { font-size: 15px; font-weight: 700; }
+.card-handle { font-size: 12px; color: #4da6ff; }
+.card-handle a { color: inherit; text-decoration: none; }
+.card-handle a:hover { text-decoration: underline; }
+.target-pill { font-size: 10px; color: #383838; background: #111; border: 1px solid #1a1a1a; border-radius: 4px; padding: 2px 6px; }
+
+.badge { font-size: 10px; font-weight: 700; border-radius: 5px; padding: 3px 8px; letter-spacing: 0.5px; flex-shrink: 0; }
+.badge.HOT      { background: #1f0808; color: #ff4d4d; border: 1px solid #3a1010; }
+.badge.WARM     { background: #1f1000; color: #ff9900; border: 1px solid #3a2000; }
+.badge.LUKEWARM { background: #081018; color: #4da6ff; border: 1px solid #0e2030; }
+
+.card-meta { font-size: 11px; color: #383838; margin-bottom: 5px; }
+.tags-row { margin-bottom: 7px; }
+.tag { display: inline-block; background: #111; border: 1px solid #1a1a1a; border-radius: 4px; padding: 2px 6px; font-size: 11px; color: #888; margin-right: 4px; margin-bottom: 2px; }
+.tag.c  { color: #c084fc; border-color: #2d1545; background: #130820; }
+.tag.s  { color: #4ade80; border-color: #143d20; background: #081508; }
+.tag.p  { color: #f59e0b; border-color: #3d2800; background: #150e00; }
+
+.card-bio    { font-size: 11px; color: #444; font-style: italic; margin-bottom: 4px; line-height: 1.4; }
+.card-reason { font-size: 11px; color: #383838; margin-bottom: 10px; line-height: 1.4; }
+
+.outreach-label { font-size: 10px; color: #383838; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+.pitch-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid #1e1e1e; color: #444; }
+.pitch-badge.crypto { color: #c084fc; border-color: #2d1545; }
+.pitch-badge.bettor { color: #4ade80; border-color: #143d20; }
+
+.outreach-box { background: #111; border: 1px solid #1a1a1a; border-radius: 7px; padding: 11px; font-size: 12px; line-height: 1.65; color: #bbb; margin-bottom: 10px; }
+
+.card-footer { display: flex; gap: 7px; align-items: center; }
+.btn-copy { background: #141414; border: 1px solid #1e1e1e; color: #888; border-radius: 6px; padding: 6px 12px; font-size: 11px; cursor: pointer; }
+.btn-copy:hover { background: #1a1a1a; }
+.btn-copy.copied { color: #4ade80; border-color: #143d20; }
+.btn-dmd { background: transparent; border: 1px solid #141414; color: #383838; border-radius: 6px; padding: 6px 12px; font-size: 11px; cursor: pointer; }
+.btn-dmd:hover { border-color: #1e1e1e; color: #666; }
+.btn-dmd.done { color: #4ade80; border-color: #143d20; }
+.btn-del { background: transparent; border: none; color: #1e1e1e; font-size: 16px; cursor: pointer; margin-left: auto; padding: 3px 7px; border-radius: 4px; line-height: 1; }
+.btn-del:hover { color: #ff4d4d; background: #150505; }
+.added-by { font-size: 10px; color: #272727; margin-left: 4px; }
+
+/* ── Empty / Loading ───────────────────── */
+.empty { text-align: center; padding: 60px 20px; color: #1e1e1e; font-size: 13px; }
+.loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.loading-box { background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 26px 34px; text-align: center; }
+.spinner { width: 24px; height: 24px; border: 2px solid #1e1e1e; border-top-color: #e0e0e0; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-box p { color: #555; font-size: 13px; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: #141414; border: 1px solid #222; border-radius: 8px; padding: 10px 16px; font-size: 12px; color: #ccc; z-index: 300; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-width: 280px; }
+.toast.show { opacity: 1; }
+.toast.err  { border-color: #3a1010; color: #ff8080; }
+
+/* ── Settings modal ────────────────────── */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal { background: #111; border: 1px solid #1e1e1e; border-radius: 14px; padding: 28px; width: 100%; max-width: 420px; }
+.modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.modal p  { font-size: 12px; color: #444; margin-bottom: 20px; line-height: 1.5; }
+.modal-section { margin-bottom: 20px; }
+.modal-section label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 6px; }
+.modal-section input { width: 100%; background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 7px; padding: 9px 11px; color: #e0e0e0; font-size: 13px; outline: none; }
+.modal-section input:focus { border-color: #2a2a2a; }
+.modal-row { display: flex; gap: 8px; margin-top: 8px; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+.rules-box { background: #0d0d0d; border: 1px solid #141414; border-radius: 7px; padding: 10px; font-size: 11px; font-family: monospace; color: #555; line-height: 1.6; white-space: pre; overflow-x: auto; margin-top: 8px; }
+.key-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #444; }
+.key-status .dot { width: 6px; height: 6px; border-radius: 50%; background: #333; flex-shrink: 0; }
+.key-status .dot.ok { background: #4ade80; }
+
+/* ── Settings gear btn ─────────────────── */
+.btn-gear { background: transparent; border: 1px solid #1a1a1a; color: #383838; border-radius: 6px; padding: 6px 9px; font-size: 14px; cursor: pointer; line-height: 1; }
+.btn-gear:hover { border-color: #2a2a2a; color: #888; }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="header-left">
-    <h1>Prospects</h1>
-    <p>TailTrade · KOL Outreach Dashboard</p>
+
+<!-- ══ LOGIN SCREEN ══════════════════════════════════════════ -->
+<div id="loginScreen" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">Prospects</div>
+    <div class="login-sub">TailTrade · KOL Outreach Dashboard</div>
+
+    <button class="btn-google" onclick="loginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="divider"><span>or</span></div>
+
+    <div class="login-field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com" /></div>
+    <div class="login-field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')submitEmail()" /></div>
+    <button class="btn-login" onclick="submitEmail()" id="loginBtn">Sign In</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-toggle" id="loginToggle">Don't have an account? <span onclick="toggleSignup()">Sign up</span></div>
   </div>
-  <div class="stats" id="statsBar">
-    <div class="stat"><div class="stat-num grey" id="statDmd">0</div><div class="stat-label">DM'd</div></div>
-    <div class="stat"><div class="stat-num" style="color:#e0e0e0" id="statTotal">0</div><div class="stat-label">Total</div></div>
-    <div class="stat"><div class="stat-num hot" id="statHot">0</div><div class="stat-label">Hot</div></div>
-    <div class="stat"><div class="stat-num warm" id="statWarm">0</div><div class="stat-label">Warm</div></div>
-    <div class="stat"><div class="stat-num lukewarm" id="statLukewarm">0</div><div class="stat-label">Lukewarm</div></div>
-  </div>
-</header>
-
-<div class="main">
-
-  <div class="settings-bar">
-    <label>Gemini API Key</label>
-    <input type="password" id="apiKeyInput" placeholder="AIza... (grátis em aistudio.google.com)" />
-    <button class="btn-sm" onclick="saveKey()">Salvar</button>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('manual', this)">Perfil Manual</button>
-    <button class="tab" onclick="switchTab('csv', this)">Import CSV</button>
-  </div>
-
-  <!-- Manual tab -->
-  <div id="tab-manual" class="add-section">
-    <h2>Adicionar Prospect</h2>
-    <textarea id="profileText" placeholder="Cole o perfil do Twitter: nome, handle, bio, tweets recentes...
-
-Exemplo:
-Nome: @pedrobet99
-Bio: Full-time Polymarket trader. Soccer markets only. 3x roi last month.
-Tweets: 'Going heavy on Brazil -1.5 tonight on Poly...' 'Kalshi soccer vol is crazy rn'"></textarea>
-    <div class="add-row">
-      <select id="targetSelect">
-        <option value="tailtrade">TailTrade (web)</option>
-        <option value="notch">Notch (app)</option>
-        <option value="both">Ambos</option>
-      </select>
-      <button class="btn-primary" id="analyzeBtn" onclick="analyzeProfile()">Analisar & Gerar</button>
-    </div>
-  </div>
-
-  <!-- CSV tab -->
-  <div id="tab-csv" class="csv-section" style="display:none">
-    <h2>Import CSV do Grok</h2>
-    <p>
-      Exporte o resultado do Grok para CSV. Colunas esperadas (qualquer ordem):<br>
-      <code>name</code>, <code>handle</code>, <code>bio</code>, <code>followers</code>, <code>recent_tweets</code> (opcional)<br>
-      Colunas extras são ignoradas. Processa um por um e salva automaticamente.
-    </p>
-    <div class="csv-drop" id="csvDrop" onclick="document.getElementById('csvFile').click()" ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="this.classList.remove('drag')">
-      <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(this.files[0])">
-      <p>Arraste o CSV aqui ou clique para selecionar</p>
-      <span>Máx. 500 perfis por importação</span>
-    </div>
-    <div class="csv-progress" id="csvProgress">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div class="csv-status" id="csvStatus">Aguardando...</div>
-        <button class="btn-sm" id="csvStopBtn" onclick="stopCSV()" style="display:none">Parar</button>
-      </div>
-      <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
-    </div>
-    <div class="add-row" style="margin-top:12px">
-      <select id="csvTargetSelect">
-        <option value="tailtrade">TailTrade (web)</option>
-        <option value="notch">Notch (app)</option>
-        <option value="both">Ambos</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="toolbar">
-    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, handle..." oninput="renderList()" />
-    <div class="filters">
-      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
-      <button class="filter-btn" onclick="setFilter('HOT',this)">Hot</button>
-      <button class="filter-btn" onclick="setFilter('WARM',this)">Warm</button>
-      <button class="filter-btn" onclick="setFilter('LUKEWARM',this)">Lukewarm</button>
-      <button class="filter-btn" onclick="setFilter('notdmd',this)">Not DM'd</button>
-      <button class="filter-btn" onclick="setFilter('dmd',this)">DM'd</button>
-    </div>
-  </div>
-
-  <div class="prospect-list" id="prospectList"></div>
-  <div class="empty-state" id="emptyState" style="display:none"><p>Nenhum prospect ainda.</p></div>
 </div>
 
+<!-- ══ MAIN APP ══════════════════════════════════════════════ -->
+<div id="mainApp" style="display:none">
+
+  <header>
+    <div class="header-left">
+      <h1>Prospects</h1>
+      <p>TailTrade · KOL Outreach Dashboard</p>
+    </div>
+    <div class="header-right">
+      <div class="stats">
+        <div class="stat"><div class="stat-num grey" id="sDmd">0</div><div class="stat-label">DM'd</div></div>
+        <div class="stat"><div class="stat-num" style="color:#e0e0e0" id="sTotal">0</div><div class="stat-label">Total</div></div>
+        <div class="stat"><div class="stat-num hot" id="sHot">0</div><div class="stat-label">Hot</div></div>
+        <div class="stat"><div class="stat-num warm" id="sWarm">0</div><div class="stat-label">Warm</div></div>
+        <div class="stat"><div class="stat-num lukewarm" id="sLukewarm">0</div><div class="stat-label">Lukewarm</div></div>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-email" id="userEmail"></div>
+        <button class="btn-gear" onclick="openSettings()" title="Settings">⚙</button>
+        <button class="btn-logout" onclick="logout()">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Settings modal -->
+  <div class="modal-bg" id="settingsModal" style="display:none" onclick="if(event.target===this)closeSettings()">
+    <div class="modal">
+      <h2>Settings</h2>
+      <p>The Gemini API key is stored in Firebase — all team members share it automatically.</p>
+      <div class="modal-section">
+        <label>Gemini API Key</label>
+        <div class="key-status" id="keyStatus"><div class="dot" id="keyDot"></div><span id="keyStatusText">Loading...</span></div>
+        <div class="modal-row">
+          <input type="password" id="settingsKey" placeholder="AIza... (free at aistudio.google.com)" />
+          <button class="btn-xs" onclick="saveKeyToFirestore()">Save</button>
+        </div>
+      </div>
+      <div class="modal-section">
+        <label>Firestore Security Rules</label>
+        <p style="margin-bottom:6px">Paste these in Firebase Console → Firestore → Rules:</p>
+        <div class="rules-box" id="rulesBox">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /prospects/{id} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.addedBy == request.auth.token.email
+        && request.resource.data.outreach.size() < 2000
+        && request.resource.data.handle.size() < 100;
+      allow update: if request.auth != null
+        && (resource.data.addedBy == request.auth.token.email
+            || request.resource.data.keys().hasOnly(['dmd']));
+      allow delete: if request.auth != null
+        && resource.data.addedBy == request.auth.token.email;
+    }
+    match /config/{id} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}</div>
+        <button class="btn-xs" style="margin-top:8px" onclick="copyRules()">Copy Rules</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-xs" onclick="closeSettings()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-body">
+
+    <!-- Left: Add panel -->
+    <div class="panel-add">
+      <div class="panel-title">Add Prospect</div>
+
+      <!-- Sub-tabs -->
+      <div class="subtabs">
+        <button class="subtab active" id="stManual" onclick="switchSubtab('manual')">Manual</button>
+        <button class="subtab" id="stCsv" onclick="switchSubtab('csv')">Import CSV</button>
+      </div>
+
+      <!-- Manual form -->
+      <div id="tabManual">
+        <div class="dup-warning" id="dupWarning">⚠ This handle already exists in your prospects.</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Handle *</label>
+            <input type="text" id="fHandle" placeholder="@username" oninput="checkDup()" />
+          </div>
+          <div class="field">
+            <label>Name</label>
+            <input type="text" id="fName" placeholder="Full name" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Followers</label>
+            <input type="text" id="fFollowers" placeholder="e.g. 12.4K" />
+          </div>
+          <div class="field">
+            <label>Firm / Role</label>
+            <input type="text" id="fFirm" placeholder="e.g. Paradigm / VC" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Bio</label>
+          <textarea id="fBio" placeholder="Paste their Twitter bio here..."></textarea>
+        </div>
+        <div class="field">
+          <label>Recent Tweets</label>
+          <textarea id="fTweets" placeholder="Paste 3–5 recent tweets or notable posts..."></textarea>
+        </div>
+        <div class="field">
+          <label>Target Platform</label>
+          <select id="fTarget">
+            <option value="tailtrade">TailTrade (web)</option>
+            <option value="notch">Notch (iOS app)</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <button class="btn-analyze" id="analyzeBtn" onclick="analyzeManual()">Analyze & Generate</button>
+      </div>
+
+      <!-- CSV form -->
+      <div id="tabCsv" style="display:none">
+        <p class="csv-desc">
+          Export profiles from Grok as CSV. Expected columns (any order):<br>
+          <code>handle</code>, <code>name</code>, <code>bio</code>, <code>followers</code>, <code>tweets</code><br>
+          Extra columns are included automatically. Duplicates are skipped.
+        </p>
+        <div class="field">
+          <label>Target Platform</label>
+          <select id="csvTarget">
+            <option value="tailtrade">TailTrade (web)</option>
+            <option value="notch">Notch (iOS app)</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div class="csv-drop" id="csvDrop"
+          onclick="document.getElementById('csvFile').click()"
+          ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="this.classList.remove('drag')">
+          <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(this.files[0])">
+          <p>Drop CSV here or click to select</p>
+          <span>Max 500 profiles · Duplicates skipped</span>
+        </div>
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-label">
+            <span id="progressStatus">Processing...</span>
+            <button class="btn-xs" id="stopBtn" onclick="csvAbort=true">Stop</button>
+          </div>
+          <div class="progress-bg"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: History panel -->
+    <div class="panel-history">
+      <div class="panel-title">History</div>
+      <div class="toolbar">
+        <input class="search-inp" type="text" id="searchInp" placeholder="Search by name, handle, firm..." oninput="renderList()" />
+        <div class="filter-btns">
+          <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+          <button class="filter-btn" onclick="setFilter('HOT',this)">Hot</button>
+          <button class="filter-btn" onclick="setFilter('WARM',this)">Warm</button>
+          <button class="filter-btn" onclick="setFilter('LUKEWARM',this)">Lukewarm</button>
+          <button class="filter-btn" onclick="setFilter('notdmd',this)">Not DM'd</button>
+          <button class="filter-btn" onclick="setFilter('dmd',this)">DM'd</button>
+        </div>
+      </div>
+      <div class="cards" id="cardList"></div>
+      <div class="empty" id="emptyMsg" style="display:none">No prospects yet. Add one on the left.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Loading overlay -->
 <div class="loading-overlay" id="loadingOverlay" style="display:none">
   <div class="loading-box">
     <div class="spinner"></div>
-    <p id="loadingText">Analisando perfil...</p>
+    <p id="loadingText">Analyzing profile...</p>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- ══ SCRIPT ════════════════════════════════════════════════ -->
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
-let prospects = JSON.parse(localStorage.getItem('prospects_v2') || '[]');
-let currentFilter = 'all';
-let csvAbort = false;
+// ── Firebase ────────────────────────────────────────────────
+let db, auth;
+let unsubscribe = null;
 
-// ── Init ───────────────────────────────────────────────────────────────────
-window.onload = () => {
-  const k = getKey();
-  if (k) document.getElementById('apiKeyInput').value = k;
-  renderList();
-};
+function loadFirebase() {
+  try {
+    db   = firebase.firestore();
+    auth = firebase.auth();
 
-// ── API Key ────────────────────────────────────────────────────────────────
-function saveKey() {
-  const k = document.getElementById('apiKeyInput').value.trim();
-  if (k) { localStorage.setItem('gemini_key', k); showToast('API Key salva!'); }
-}
-function getKey() { return localStorage.getItem('gemini_key') || ''; }
-
-// ── Tabs ───────────────────────────────────────────────────────────────────
-function switchTab(name, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('tab-manual').style.display = name === 'manual' ? '' : 'none';
-  document.getElementById('tab-csv').style.display   = name === 'csv'    ? '' : 'none';
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        showApp(user);
+        startListener();
+      } else {
+        showLogin();
+        if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+      }
+    });
+    return true;
+  } catch(e) {
+    console.error(e);
+    return false;
+  }
 }
 
-// ── Gemini call ────────────────────────────────────────────────────────────
+// ── Init ────────────────────────────────────────────────────
+function init() {
+  loadFirebase();
+}
+
+
+
+// ── Auth ────────────────────────────────────────────────────
+let isSignupMode = false;
+
+function toggleSignup() {
+  isSignupMode = !isSignupMode;
+  document.getElementById('loginBtn').textContent   = isSignupMode ? 'Create Account' : 'Sign In';
+  document.getElementById('loginToggle').innerHTML  = isSignupMode
+    ? 'Already have an account? <span onclick="toggleSignup()">Sign in</span>'
+    : "Don't have an account? <span onclick=\"toggleSignup()\">Sign up</span>";
+}
+
+async function loginGoogle() {
+  try {
+    await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  } catch(e) {
+    document.getElementById('loginError').textContent = e.message;
+  }
+}
+
+async function submitEmail() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Enter email and password.'; return; }
+  try {
+    if (isSignupMode) await auth.createUserWithEmailAndPassword(email, pass);
+    else              await auth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    errEl.textContent = e.message;
+  }
+}
+
+async function logout() {
+  await auth.signOut();
+}
+
+// ── Screen switching ────────────────────────────────────────
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+}
+
+function showApp(user) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('userEmail').textContent = user.email || user.displayName || '';
+  const av = document.getElementById('userAvatar');
+  if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" />`;
+  else av.textContent = (user.email || '?')[0].toUpperCase();
+  loadSharedKey();
+}
+
+// ── Gemini Key (stored in Firestore, shared across team) ────
+let cachedKey = '';
+
+async function loadSharedKey() {
+  try {
+    const doc = await db.collection('config').doc('settings').get();
+    if (doc.exists && doc.data().geminiKey) {
+      cachedKey = doc.data().geminiKey;
+      setKeyStatus(true);
+    } else {
+      setKeyStatus(false);
+    }
+  } catch(e) { setKeyStatus(false); }
+}
+
+async function saveKeyToFirestore() {
+  const k = document.getElementById('settingsKey').value.trim();
+  if (!k || !k.startsWith('AIza')) { showToast('Invalid key format.', 3000, true); return; }
+  try {
+    await db.collection('config').doc('settings').set({ geminiKey: k }, { merge: true });
+    cachedKey = k;
+    document.getElementById('settingsKey').value = '';
+    setKeyStatus(true);
+    showToast('API key saved for all team members.');
+  } catch(e) { showToast('Error saving key: ' + e.message, 4000, true); }
+}
+
+function setKeyStatus(ok) {
+  document.getElementById('keyDot').className = 'dot' + (ok ? ' ok' : '');
+  document.getElementById('keyStatusText').textContent = ok ? 'Configured ✓' : 'Not set — paste key below';
+}
+
+function getKey() { return cachedKey; }
+
+// ── Settings modal ──────────────────────────────────────────
+function openSettings()  { document.getElementById('settingsModal').style.display = 'flex'; }
+function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+function copyRules() {
+  navigator.clipboard.writeText(document.getElementById('rulesBox').textContent);
+  showToast('Rules copied!');
+}
+
+// ── Sub-tabs ────────────────────────────────────────────────
+function switchSubtab(name) {
+  document.getElementById('tabManual').style.display = name === 'manual' ? '' : 'none';
+  document.getElementById('tabCsv').style.display    = name === 'csv'    ? '' : 'none';
+  document.getElementById('stManual').classList.toggle('active', name === 'manual');
+  document.getElementById('stCsv').classList.toggle('active',    name === 'csv');
+}
+
+// ── Duplicate check ─────────────────────────────────────────
+let prospects = [];
+function normalizeHandle(h) { return (h||'').replace('@','').toLowerCase().trim(); }
+
+function checkDup() {
+  const h = normalizeHandle(document.getElementById('fHandle').value);
+  const dup = h && prospects.some(p => normalizeHandle(p.handle) === h);
+  document.getElementById('dupWarning').style.display = dup ? '' : 'none';
+}
+
+// ── Gemini call ─────────────────────────────────────────────
 async function callGemini(profileData, target) {
   const key = getKey();
-  if (!key) throw new Error('API Key não configurada');
+  if (!key) throw new Error('Gemini API key not set');
 
   const targetDesc = {
-    tailtrade: 'TailTrade (web platform, tailtrade.com)',
-    notch:     'Notch (iOS app)',
-    both:      'TailTrade (web) e Notch (iOS app)'
+    tailtrade: 'TailTrade (web app, tailtrade.com)',
+    notch:     'Notch (iOS app, non-custodial wallet)',
+    both:      'TailTrade (web) and Notch (iOS)'
   }[target] || 'TailTrade';
 
-  const prompt = `You are a growth analyst for TailTrade / Notch — a perpetual derivatives (perps) platform for sports, the first in the world focused on sports teams. No expiry, leverage, funding rates. Live on Solana. Currently in early beta. Web version: TailTrade. iOS app: Notch (non-custodial wallet, legal for US users). Goal: find KOLs and traders to onboard as early testers.
+  const prompt = `You are a growth analyst for TailTrade / Notch — the world's first perpetual derivatives (perps) platform for sports teams. Features: no expiry, leverage, funding rates. Live on Solana. Currently in early beta. Web: TailTrade. iOS: Notch (non-custodial, US-legal). Goal: identify and DM KOLs and traders to onboard as early testers.
 
-PROFILE:
+PROFILE DATA:
 ${profileData}
 
-TARGET PLATFORM: ${targetDesc}
+TARGET: ${targetDesc}
 
-CLASSIFY the profile and output ONLY valid JSON (no markdown):
+Respond ONLY with valid JSON (no markdown):
 {
-  "name": "Full Name or handle if no name",
+  "name": "Full name or handle if unknown",
   "handle": "@handle",
   "firm": "Firm or role, empty string if none",
-  "followers": "follower count as string, empty if unknown",
-  "profile_type": "crypto_trader" or "bettor" or "kol" or "media",
-  "temperature": "HOT" or "WARM" or "LUKEWARM",
+  "followers": "follower count as string",
+  "profile_type": "crypto_trader" | "bettor" | "kol" | "media",
+  "temperature": "HOT" | "WARM" | "LUKEWARM",
   "temperature_reason": "One sentence why",
-  "interests": ["tag1", "tag2"],
-  "interest_types": ["crypto", "sports", "polymarket"],
+  "interests": ["tag1", "tag2", "tag3"],
+  "interest_types": ["crypto"|"sports"|"polymarket", ...],
   "bio_summary": "One sentence who they are",
-  "outreach": "Personalized DM — see rules below"
+  "outreach": "Personalized DM — follow rules below"
 }
 
-TEMPERATURE rules:
-- HOT: Actively trades Polymarket/Kalshi on soccer/sports AND/OR is a perp/derivatives trader with sports interest → top priority
-- WARM: Perp/futures trader (no sports) OR sports bettor with crypto exposure → worth reaching out
-- LUKEWARM: Sports media, KOL without trading, casual crypto user → long shot
+TEMPERATURE:
+- HOT: Actively trades Polymarket/Kalshi on soccer/sports, OR is a perp/derivatives trader with sports interest
+- WARM: Perp/futures trader (no sports) OR sports bettor with some crypto exposure
+- LUKEWARM: Sports media/KOL without trading, casual fan, traditional finance adjacent
 
-OUTREACH rules (critical):
-- If profile_type is "crypto_trader" or they mention perps/futures/leverage: use technical pitch. Mention perp DEX, no expiry, funding rates, leverage on sports teams. Example angle: "sports teams as an uncorrelated asset class"
-- If profile_type is "bettor" or "kol" (non-crypto): NEVER mention crypto, perps, or Solana. Use: "trade football like stocks" or "parlay analogy: bet on your team across 4 games — if one loses, your money stays, the others make up for it". Invite them to test with their own funds.
-- Always be specific to something in their profile. Max 3 sentences. Sound human, not salesy.
-- End with the platform link naturally if it fits.`;
+OUTREACH rules:
+- crypto_trader / mentions perps/futures/leverage → technical pitch: perp DEX, no expiry, funding rates, sports as uncorrelated asset class
+- bettor / kol / no crypto → NEVER mention crypto, perps, or Solana. Use: "trade football like stocks" or parlay analogy: "bet on your team across 4 games — if one loses, your money stays and the others make up for it"
+- Be specific to something in their profile. Max 3 sentences. Sound human, not salesy.`;
 
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `HTTP ${res.status}`);
-  }
-
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
   const data = await res.json();
   let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  raw = raw.replace(/```json|```/g, '').trim();
+  raw = raw.replace(/```json|```/g,'').trim();
   return JSON.parse(raw);
 }
 
-// ── Manual analyze ─────────────────────────────────────────────────────────
-async function analyzeProfile() {
-  const text = document.getElementById('profileText').value.trim();
-  const target = document.getElementById('targetSelect').value;
-  if (!text) { showToast('Cole o perfil primeiro.'); return; }
-  if (!getKey()) { showToast('Insira sua Gemini API Key.'); return; }
+// ── Rate limiter ────────────────────────────────────────────
+let lastCallAt = 0;
+function rateLimitOk() {
+  const now = Date.now();
+  if (now - lastCallAt < 3000) { showToast('Please wait a moment before analyzing again.', 2500, true); return false; }
+  lastCallAt = now;
+  return true;
+}
 
-  setLoading(true, 'Analisando perfil...');
+// ── Input validation ────────────────────────────────────────
+function validateHandle(h) { return /^@?[a-zA-Z0-9_]{1,50}$/.test(h); }
+function sanitizeText(s, max) { return String(s).trim().slice(0, max); }
+
+// ── Manual analyze ──────────────────────────────────────────
+async function analyzeManual() {
+  const handle   = document.getElementById('fHandle').value.trim();
+  const name     = sanitizeText(document.getElementById('fName').value, 100);
+  const followers= sanitizeText(document.getElementById('fFollowers').value, 20);
+  const firm     = sanitizeText(document.getElementById('fFirm').value, 100);
+  const bio      = sanitizeText(document.getElementById('fBio').value, 500);
+  const tweets   = sanitizeText(document.getElementById('fTweets').value, 1000);
+  const target   = document.getElementById('fTarget').value;
+
+  if (!handle) { showToast('Handle is required.'); return; }
+  if (!validateHandle(handle)) { showToast('Invalid handle — letters, numbers and _ only.', 3000, true); return; }
+  if (!getKey()) { showToast('API key not configured. Click ⚙ to set it.', 3000, true); return; }
+  if (!rateLimitOk()) return;
+
+  setLoading(true, 'Analyzing profile...');
   document.getElementById('analyzeBtn').disabled = true;
 
+  const profileText = [
+    handle && `Handle: ${handle}`,
+    name && `Name: ${name}`,
+    followers && `Followers: ${followers}`,
+    firm && `Firm/Role: ${firm}`,
+    bio && `Bio: ${bio}`,
+    tweets && `Recent Tweets:\n${tweets}`,
+  ].filter(Boolean).join('\n');
+
   try {
-    const parsed = await callGemini(text, target);
-    addProspect(parsed, target);
-    document.getElementById('profileText').value = '';
-    showToast('Prospect adicionado!');
+    const parsed = await callGemini(profileText, target);
+    await saveProspect({ ...parsed, handle: handle || parsed.handle, target });
+    // clear form
+    ['fHandle','fName','fFollowers','fFirm','fBio','fTweets'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('dupWarning').style.display = 'none';
+    showToast('Prospect added!');
   } catch(e) {
-    showToast('Erro: ' + e.message, 4000, true);
+    showToast(e.message, 4000, true);
     console.error(e);
   } finally {
     setLoading(false);
@@ -348,134 +741,111 @@ async function analyzeProfile() {
   }
 }
 
-// ── CSV Import ─────────────────────────────────────────────────────────────
-function onDragOver(e) { e.preventDefault(); document.getElementById('csvDrop').classList.add('drag'); }
-function onDrop(e) {
-  e.preventDefault();
-  document.getElementById('csvDrop').classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if (file) handleCSV(file);
+// ── Firestore ───────────────────────────────────────────────
+async function saveProspect(data) {
+  const user = auth.currentUser;
+  await db.collection('prospects').add({
+    ...data,
+    dmd: false,
+    addedBy: user?.email || user?.displayName || 'unknown',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 }
+
+function startListener() {
+  if (unsubscribe) unsubscribe();
+  unsubscribe = db.collection('prospects')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(snap => {
+      prospects = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      renderList();
+    }, err => console.error('Firestore error:', err));
+}
+
+async function toggleDmd(id) {
+  const p = prospects.find(x => x._id === id);
+  if (p) await db.collection('prospects').doc(id).update({ dmd: !p.dmd });
+}
+
+async function delProspect(id) {
+  if (!confirm('Remove this prospect?')) return;
+  await db.collection('prospects').doc(id).delete();
+}
+
+// ── CSV ─────────────────────────────────────────────────────
+let csvAbort = false;
+
+function onDragOver(e) { e.preventDefault(); document.getElementById('csvDrop').classList.add('drag'); }
+function onDrop(e) { e.preventDefault(); document.getElementById('csvDrop').classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) handleCSV(f); }
 
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
   return lines.slice(1).map(line => {
     const vals = splitCSVLine(line);
     const obj = {};
-    headers.forEach((h, i) => { obj[h] = (vals[i] || '').replace(/^"|"$/g, '').trim(); });
+    headers.forEach((h,i) => { obj[h] = (vals[i]||'').replace(/^"|"$/g,'').trim(); });
     return obj;
   }).filter(r => r.handle || r.name);
 }
 
 function splitCSVLine(line) {
-  const result = []; let cur = ''; let inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
-    else cur += c;
+  const r = []; let c = ''; let q = false;
+  for (const ch of line) {
+    if (ch === '"') q = !q;
+    else if (ch === ',' && !q) { r.push(c); c = ''; }
+    else c += ch;
   }
-  result.push(cur);
-  return result;
-}
-
-function rowToProfileText(row) {
-  const parts = [];
-  if (row.name) parts.push(`Nome: ${row.name}`);
-  if (row.handle) parts.push(`Handle: ${row.handle}`);
-  if (row.bio) parts.push(`Bio: ${row.bio}`);
-  if (row.followers) parts.push(`Followers: ${row.followers}`);
-  if (row.firm || row.fund) parts.push(`Firm: ${row.firm || row.fund}`);
-  if (row.recent_tweets || row.tweets) parts.push(`Tweets recentes: ${row.recent_tweets || row.tweets}`);
-  // include any other columns
-  const known = ['name','handle','bio','followers','firm','fund','recent_tweets','tweets'];
-  Object.entries(row).forEach(([k, v]) => {
-    if (!known.includes(k) && v) parts.push(`${k}: ${v}`);
-  });
-  return parts.join('\n');
+  r.push(c); return r;
 }
 
 async function handleCSV(file) {
   if (!file) return;
-  if (!getKey()) { showToast('Insira sua Gemini API Key primeiro.'); return; }
+  if (!getKey()) { showToast('Set your Gemini API key first.'); return; }
 
   const text = await file.text();
   const rows = parseCSV(text).slice(0, 500);
-  if (!rows.length) { showToast('CSV vazio ou sem colunas válidas.', 3000, true); return; }
+  if (!rows.length) { showToast('Empty CSV or no valid columns.', 3000, true); return; }
 
-  const target = document.getElementById('csvTargetSelect').value;
-  const progressEl = document.getElementById('csvProgress');
-  const progressBar = document.getElementById('progressBar');
-  const statusEl = document.getElementById('csvStatus');
-  const stopBtn = document.getElementById('csvStopBtn');
+  const target = document.getElementById('csvTarget').value;
+  const wrap   = document.getElementById('progressWrap');
+  const fill   = document.getElementById('progressFill');
+  const status = document.getElementById('progressStatus');
 
-  progressEl.style.display = 'block';
-  stopBtn.style.display = '';
+  wrap.style.display = 'block';
   csvAbort = false;
 
-  let done = 0, errors = 0;
+  let done = 0, skipped = 0, errors = 0;
   for (const row of rows) {
     if (csvAbort) break;
-    const profileText = rowToProfileText(row);
-    statusEl.textContent = `Processando ${done + 1} / ${rows.length} — ${row.handle || row.name || ''}`;
-    progressBar.style.width = `${Math.round((done / rows.length) * 100)}%`;
+    const handle = (row.handle || row.username || '').replace('@','').trim();
+    status.textContent = `Processing ${done+1}/${rows.length} — @${handle || row.name || ''}`;
+    fill.style.width = `${Math.round((done/rows.length)*100)}%`;
 
-    try {
-      const parsed = await callGemini(profileText, target);
-      addProspect(parsed, target);
-    } catch(e) {
-      errors++;
-      console.error('Row error:', e.message, row);
+    // Skip duplicates
+    if (handle && prospects.some(p => normalizeHandle(p.handle) === handle.toLowerCase())) {
+      skipped++; done++; continue;
     }
 
+    const profileText = Object.entries(row).map(([k,v]) => v ? `${k}: ${v}` : '').filter(Boolean).join('\n');
+    try {
+      const parsed = await callGemini(profileText, target);
+      await saveProspect({ ...parsed, handle: handle ? '@'+handle : parsed.handle, target });
+    } catch(e) { errors++; console.error(e.message, row); }
+
     done++;
-    await sleep(800); // rate limit buffer
+    await new Promise(r => setTimeout(r, 900));
   }
 
-  progressBar.style.width = '100%';
-  statusEl.textContent = csvAbort
-    ? `Parado em ${done} / ${rows.length}${errors ? ` (${errors} erros)` : ''}`
-    : `Concluído: ${done} perfis${errors ? ` (${errors} erros)` : ''}`;
-  stopBtn.style.display = 'none';
-  showToast(`${done - errors} prospects importados!`);
+  fill.style.width = '100%';
+  status.textContent = `Done: ${done-errors-skipped} added, ${skipped} skipped, ${errors} errors`;
+  showToast(`Import complete!`);
+  document.getElementById('csvFile').value = '';
 }
 
-function stopCSV() { csvAbort = true; }
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// ── Data ───────────────────────────────────────────────────────────────────
-function addProspect(parsed, target) {
-  prospects.unshift({ id: Date.now() + Math.random(), ...parsed, target, dmd: false, createdAt: new Date().toISOString() });
-  save();
-  renderList();
-}
-
-function save() { localStorage.setItem('prospects_v2', JSON.stringify(prospects)); }
-
-function toggleDmd(id) {
-  const p = prospects.find(x => x.id === id);
-  if (p) { p.dmd = !p.dmd; save(); renderList(); }
-}
-
-function deleteProspect(id) {
-  if (!confirm('Remover este prospect?')) return;
-  prospects = prospects.filter(x => x.id !== id);
-  save(); renderList();
-}
-
-function copyMessage(id, btn) {
-  const p = prospects.find(x => x.id === id);
-  if (!p) return;
-  navigator.clipboard.writeText(p.outreach).then(() => {
-    btn.textContent = 'Copiado!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy Message'; btn.classList.remove('copied'); }, 2000);
-  });
-}
-
-// ── Render ─────────────────────────────────────────────────────────────────
+// ── Filter & render ─────────────────────────────────────────
+let currentFilter = 'all';
 function setFilter(f, el) {
   currentFilter = f;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -483,92 +853,92 @@ function setFilter(f, el) {
   renderList();
 }
 
-function updateStats() {
-  document.getElementById('statTotal').textContent    = prospects.length;
-  document.getElementById('statDmd').textContent      = prospects.filter(p => p.dmd).length;
-  document.getElementById('statHot').textContent      = prospects.filter(p => p.temperature === 'HOT').length;
-  document.getElementById('statWarm').textContent     = prospects.filter(p => p.temperature === 'WARM').length;
-  document.getElementById('statLukewarm').textContent = prospects.filter(p => p.temperature === 'LUKEWARM').length;
-}
-
 function renderList() {
-  updateStats();
-  const search = document.getElementById('searchInput').value.toLowerCase();
+  const s = (document.getElementById('searchInp')?.value||'').toLowerCase();
   let list = [...prospects];
 
-  if (currentFilter === 'HOT')      list = list.filter(p => p.temperature === 'HOT');
+  if      (currentFilter === 'HOT')      list = list.filter(p => p.temperature === 'HOT');
   else if (currentFilter === 'WARM')     list = list.filter(p => p.temperature === 'WARM');
   else if (currentFilter === 'LUKEWARM') list = list.filter(p => p.temperature === 'LUKEWARM');
   else if (currentFilter === 'dmd')      list = list.filter(p => p.dmd);
   else if (currentFilter === 'notdmd')   list = list.filter(p => !p.dmd);
 
-  if (search) list = list.filter(p =>
-    (p.name||'').toLowerCase().includes(search) ||
-    (p.handle||'').toLowerCase().includes(search) ||
-    (p.firm||'').toLowerCase().includes(search)
+  if (s) list = list.filter(p =>
+    (p.name||'').toLowerCase().includes(s) ||
+    (p.handle||'').toLowerCase().includes(s) ||
+    (p.firm||'').toLowerCase().includes(s)
   );
 
-  const container = document.getElementById('prospectList');
-  const empty = document.getElementById('emptyState');
+  // Stats
+  document.getElementById('sTotal').textContent    = prospects.length;
+  document.getElementById('sDmd').textContent      = prospects.filter(p=>p.dmd).length;
+  document.getElementById('sHot').textContent      = prospects.filter(p=>p.temperature==='HOT').length;
+  document.getElementById('sWarm').textContent     = prospects.filter(p=>p.temperature==='WARM').length;
+  document.getElementById('sLukewarm').textContent = prospects.filter(p=>p.temperature==='LUKEWARM').length;
+
+  // Check dup for current handle input
+  checkDup();
+
+  const container = document.getElementById('cardList');
+  const empty     = document.getElementById('emptyMsg');
 
   if (!list.length) { container.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
 
-  const targetLabel = { tailtrade: 'TailTrade', notch: 'Notch', both: 'TailTrade + Notch' };
-  const pitchTypeLabel = { crypto_trader: 'pitch técnico', bettor: 'pitch bettor', kol: 'pitch KOL', media: 'pitch mídia' };
-  const pitchTypeCls   = { crypto_trader: 'crypto', bettor: 'bettor', kol: 'bettor', media: 'bettor' };
+  const tLabel = { tailtrade:'TailTrade', notch:'Notch', both:'TailTrade + Notch' };
+  const pLabel = { crypto_trader:'crypto pitch', bettor:'bettor pitch', kol:'kol pitch', media:'media pitch' };
+  const pCls   = { crypto_trader:'crypto', bettor:'bettor', kol:'bettor', media:'bettor' };
 
   container.innerHTML = list.map(p => `
-    <div class="prospect-card ${p.dmd ? 'dmd' : ''}">
-      <div class="card-header">
-        <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;">
-          <span class="card-name">${esc(p.name || p.handle || '')}</span>
-          <span class="card-handle">${p.handle ? `<a href="https://x.com/${p.handle.replace('@','')}" target="_blank">${esc(p.handle)}</a>` : ''}</span>
-          ${p.target ? `<span class="target-pill">${targetLabel[p.target] || p.target}</span>` : ''}
+    <div class="card ${p.dmd?'dmd':''}">
+      <div class="card-top">
+        <div class="card-name-row">
+          <span class="card-name">${esc(p.name||p.handle||'')}</span>
+          ${p.handle ? `<span class="card-handle"><a href="https://x.com/${p.handle.replace('@','')}" target="_blank">${esc(p.handle)}</a></span>` : ''}
+          ${p.target ? `<span class="target-pill">${tLabel[p.target]||p.target}</span>` : ''}
         </div>
         <span class="badge ${p.temperature}">${p.temperature}</span>
       </div>
-      ${p.firm ? `<div class="card-meta">${esc(p.firm)}${p.followers ? ' · ' + esc(p.followers) + ' followers' : ''}</div>` : (p.followers ? `<div class="card-meta">${esc(p.followers)} followers</div>` : '')}
-      ${(p.interests||[]).length ? `
-        <div class="card-interests">
-          <span class="label">Interests</span>
-          ${p.interests.map((tag, i) => {
-            const types = p.interest_types || [];
-            const cls = types[i] ? `type-${types[i]}` : '';
-            return `<span class="tag ${cls}">${esc(tag)}</span>`;
-          }).join('')}
-        </div>` : ''}
+      ${p.firm||p.followers ? `<div class="card-meta">${[p.firm, p.followers?p.followers+' followers':''].filter(Boolean).join(' · ')}</div>` : ''}
+      ${(p.interests||[]).length ? `<div class="tags-row">${p.interests.map((t,i)=>{
+        const types = p.interest_types||[];
+        const cls = types[i]==='crypto'?'c':types[i]==='sports'?'s':types[i]==='polymarket'?'p':'';
+        return `<span class="tag ${cls}">${esc(t)}</span>`;
+      }).join('')}</div>` : ''}
       ${p.bio_summary ? `<div class="card-bio">${esc(p.bio_summary)}</div>` : ''}
       ${p.temperature_reason ? `<div class="card-reason">${esc(p.temperature_reason)}</div>` : ''}
-      <div class="pitch-label">
-        Outreach
-        ${p.profile_type ? `<span class="pitch-type ${pitchTypeCls[p.profile_type]||''}">${pitchTypeLabel[p.profile_type]||p.profile_type}</span>` : ''}
-      </div>
-      <div class="outreach-box">${esc(p.outreach || '')}</div>
-      <div class="card-actions">
-        <button class="btn-copy" onclick="copyMessage(${JSON.stringify(p.id)}, this)">Copy Message</button>
-        <button class="btn-dmd ${p.dmd ? 'done' : ''}" onclick="toggleDmd(${JSON.stringify(p.id)})">${p.dmd ? '✓ DM\'d' : 'Mark DM\'d'}</button>
-        <button class="btn-delete" onclick="deleteProspect(${JSON.stringify(p.id)})" title="Remover">×</button>
+      <div class="outreach-label">Outreach ${p.profile_type ? `<span class="pitch-badge ${pCls[p.profile_type]||''}">${pLabel[p.profile_type]||p.profile_type}</span>` : ''}</div>
+      <div class="outreach-box">${esc(p.outreach||'')}</div>
+      <div class="card-footer">
+        <button class="btn-copy" onclick="copyMsg('${p._id}',this)">Copy Message</button>
+        <button class="btn-dmd ${p.dmd?'done':''}" onclick="toggleDmd('${p._id}')">${p.dmd?'✓ DM\'d':'Mark DM\'d'}</button>
+        ${p.addedBy ? `<span class="added-by">by ${esc(p.addedBy)}</span>` : ''}
+        <button class="btn-del" onclick="delProspect('${p._id}')" title="Remove">×</button>
       </div>
     </div>
   `).join('');
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function copyMsg(id, btn) {
+  const p = prospects.find(x => x._id === id);
+  if (!p) return;
+  navigator.clipboard.writeText(p.outreach||'').then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Message'; btn.classList.remove('copied'); }, 2000);
+  });
 }
 
-function setLoading(on, text) {
-  document.getElementById('loadingOverlay').style.display = on ? 'flex' : 'none';
-  if (text) document.getElementById('loadingText').textContent = text;
-}
-
-function showToast(msg, duration = 2500, isError = false) {
+// ── Utils ───────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function setLoading(on, text) { document.getElementById('loadingOverlay').style.display = on?'flex':'none'; if(text) document.getElementById('loadingText').textContent = text; }
+function showToast(msg, ms=2500, err=false) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => { t.className = 'toast'; }, duration);
+  t.textContent = msg; t.className = 'toast show'+(err?' err':'');
+  setTimeout(() => { t.className = 'toast'; }, ms);
 }
+
+// ── Boot ────────────────────────────────────────────────────
+init();
 </script>
 </body>
 </html>
