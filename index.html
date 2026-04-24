@@ -708,7 +708,7 @@ OUTREACH rules:
       'X-Title': 'Prospects'
     },
     body: JSON.stringify({
-      model: 'qwen/qwen2.5-vl-7b-instruct:free',
+      model: 'google/gemma-4-26b-a4b-it:free',
       messages: [{ role: 'user', content }]
     })
   });
@@ -720,9 +720,23 @@ OUTREACH rules:
     throw new Error(msg || `HTTP ${res.status}`);
   }
   let raw = body.choices?.[0]?.message?.content || '';
-  console.log('Raw response:', raw);
   raw = raw.replace(/```json|```/g,'').trim();
   return JSON.parse(raw);
+}
+
+async function callGeminiWithRetry(profileData, target, images = [], attempts = 3) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await callGemini(profileData, target, images);
+    } catch(e) {
+      const is429 = e.message.includes('429') || e.message.includes('rate') || e.message.includes('Provider');
+      if (is429 && i < attempts - 1) {
+        const wait = (i + 1) * 4000;
+        document.getElementById('loadingText').textContent = `Rate limited — retrying in ${wait/1000}s... (${i+1}/${attempts})`;
+        await new Promise(r => setTimeout(r, wait));
+      } else throw e;
+    }
+  }
 }
 
 // ── Image upload ────────────────────────────────────────────
@@ -830,7 +844,7 @@ async function analyzeManual() {
   ].filter(Boolean).join('\n');
 
   try {
-    const parsed = await callGemini(profileText, target, uploadedImages);
+    const parsed = await callGeminiWithRetry(profileText, target, uploadedImages);
     await saveProspect({ ...parsed, handle: handle || parsed.handle, target });
     // clear form
     ['fHandle','fName','fFollowers','fFirm','fBio','fTweets'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
@@ -936,7 +950,7 @@ async function handleCSV(file) {
 
     const profileText = Object.entries(row).map(([k,v]) => v ? `${k}: ${v}` : '').filter(Boolean).join('\n');
     try {
-      const parsed = await callGemini(profileText, target);
+      const parsed = await callGeminiWithRetry(profileText, target);
       await saveProspect({ ...parsed, handle: handle ? '@'+handle : parsed.handle, target });
     } catch(e) { errors++; console.error(e.message, row); }
 
