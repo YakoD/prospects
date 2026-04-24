@@ -341,12 +341,12 @@ header {
   <div class="modal-bg" id="settingsModal" style="display:none" onclick="if(event.target===this)closeSettings()">
     <div class="modal">
       <h2>Settings</h2>
-      <p>The Gemini API key is stored in Firebase — all team members share it automatically.</p>
+      <p>API key stored in Firebase — all team members share it automatically.</p>
       <div class="modal-section">
-        <label>Gemini API Key</label>
+        <label>OpenRouter API Key</label>
         <div class="key-status" id="keyStatus"><div class="dot" id="keyDot"></div><span id="keyStatusText">Loading...</span></div>
         <div class="modal-row">
-          <input type="password" id="settingsKey" placeholder="AIza... (free at aistudio.google.com)" />
+          <input type="password" id="settingsKey" placeholder="sk-or-... (free at openrouter.ai)" />
           <button class="btn-xs" onclick="saveKeyToFirestore()">Save</button>
         </div>
       </div>
@@ -605,7 +605,7 @@ async function loadSharedKey() {
 
 async function saveKeyToFirestore() {
   const k = document.getElementById('settingsKey').value.trim();
-  if (!k || !k.startsWith('AIza')) { showToast('Invalid key format.', 3000, true); return; }
+  if (!k) { showToast('Paste your API key first.', 3000, true); return; }
   try {
     await db.collection('config').doc('settings').set({ geminiKey: k }, { merge: true });
     cachedKey = k;
@@ -648,10 +648,10 @@ function checkDup() {
   document.getElementById('dupWarning').style.display = dup ? '' : 'none';
 }
 
-// ── Gemini call ─────────────────────────────────────────────
+// ── AI call (OpenRouter) ─────────────────────────────────────
 async function callGemini(profileData, target, images = []) {
   const key = getKey();
-  if (!key) throw new Error('Gemini API key not set');
+  if (!key) throw new Error('API key not set — click ⚙ to configure');
 
   const targetDesc = {
     tailtrade: 'TailTrade (web app, tailtrade.com)',
@@ -661,48 +661,61 @@ async function callGemini(profileData, target, images = []) {
 
   const prompt = `You are a growth analyst for TailTrade / Notch — the world's first perpetual derivatives (perps) platform for sports teams. Features: no expiry, leverage, funding rates. Live on Solana. Currently in early beta. Web: TailTrade. iOS: Notch (non-custodial, US-legal). Goal: identify and DM KOLs and traders to onboard as early testers.
 
-PROFILE DATA:
-${profileData}
-
+${profileData ? `PROFILE DATA:\n${profileData}\n` : ''}
 TARGET: ${targetDesc}
 
-Respond ONLY with valid JSON (no markdown):
+${images.length ? 'Analyze the screenshot(s) to extract: name, handle, bio, followers, firm/role, and any visible tweets/posts.' : ''}
+
+Respond ONLY with valid JSON (no markdown, no explanation):
 {
   "name": "Full name or handle if unknown",
   "handle": "@handle",
   "firm": "Firm or role, empty string if none",
   "followers": "follower count as string",
-  "profile_type": "crypto_trader" | "bettor" | "kol" | "media",
-  "temperature": "HOT" | "WARM" | "LUKEWARM",
+  "profile_type": "crypto_trader or bettor or kol or media",
+  "temperature": "HOT or WARM or LUKEWARM",
   "temperature_reason": "One sentence why",
   "interests": ["tag1", "tag2", "tag3"],
-  "interest_types": ["crypto"|"sports"|"polymarket", ...],
+  "interest_types": ["crypto or sports or polymarket"],
   "bio_summary": "One sentence who they are",
-  "outreach": "Personalized DM — follow rules below"
+  "outreach": "Personalized DM"
 }
 
 TEMPERATURE:
-- HOT: Actively trades Polymarket/Kalshi on soccer/sports, OR is a perp/derivatives trader with sports interest
-- WARM: Perp/futures trader (no sports) OR sports bettor with some crypto exposure
-- LUKEWARM: Sports media/KOL without trading, casual fan, traditional finance adjacent
+- HOT: Actively trades Polymarket/Kalshi on soccer/sports, OR perp/derivatives trader with sports interest
+- WARM: Perp/futures trader (no sports) OR sports bettor with crypto exposure
+- LUKEWARM: Sports media/KOL without trading, casual fan, traditional finance
 
 OUTREACH rules:
-- crypto_trader / mentions perps/futures/leverage → technical pitch: perp DEX, no expiry, funding rates, sports as uncorrelated asset class
-- bettor / kol / no crypto → NEVER mention crypto, perps, or Solana. Use: "trade football like stocks" or parlay analogy: "bet on your team across 4 games — if one loses, your money stays and the others make up for it"
-- Be specific to something in their profile. Max 3 sentences. Sound human, not salesy.`;
+- crypto_trader / perps/futures/leverage → technical pitch: perp DEX, no expiry, funding rates, sports as uncorrelated asset class
+- bettor / kol / no crypto → NEVER mention crypto, perps, or Solana. Use "trade football like stocks" or parlay analogy
+- Be specific to their profile. Max 3 sentences. Sound human.`;
 
-  const parts = [
-    ...images.map(img => ({ inline_data: { mime_type: img.mimeType, data: img.base64 } })),
-    { text: prompt }
+  const content = [
+    ...images.map(img => ({
+      type: 'image_url',
+      image_url: { url: `data:${img.mimeType};base64,${img.base64}` }
+    })),
+    { type: 'text', text: prompt }
   ];
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts }] })
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key}`,
+      'HTTP-Referer': 'https://yakod.github.io/prospects/',
+      'X-Title': 'Prospects'
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.0-flash-exp:free',
+      messages: [{ role: 'user', content }]
+    })
   });
+
   if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
   const data = await res.json();
-  let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  let raw = data.choices?.[0]?.message?.content || '';
   raw = raw.replace(/```json|```/g,'').trim();
   return JSON.parse(raw);
 }
