@@ -398,37 +398,27 @@ service cloud.firestore {
       <div id="tabManual">
         <div class="dup-warning" id="dupWarning">⚠ This handle already exists in your prospects.</div>
 
-        <!-- Screenshot upload -->
         <div class="field">
-          <label>Screenshots <span style="color:#272727;font-size:10px;text-transform:none;letter-spacing:0">(profile + tweets)</span></label>
-          <div class="img-drop" id="imgDrop"
-            onclick="document.getElementById('imgInput').click()"
-            ondragover="onImgDragOver(event)" ondrop="onImgDrop(event)" ondragleave="this.classList.remove('drag')">
-            <input type="file" id="imgInput" accept="image/*" multiple onchange="addImages(this.files)">
-            <p>Drop screenshots here or click to select</p>
-            <span>Multiple images supported · PNG, JPG, WebP</span>
-          </div>
-          <div class="img-previews" id="imgPreviews"></div>
+          <label>Handle *</label>
+          <input type="text" id="fHandle" placeholder="@username" oninput="checkDup()" />
         </div>
-
-        <!-- Optional text fields -->
-        <div id="extraFields">
-          <span class="section-toggle" onclick="toggleExtra()">▸ Add extra context (optional)</span>
-          <div id="extraContent" style="display:none">
-            <div class="field-row">
-              <div class="field"><label>Handle</label><input type="text" id="fHandle" placeholder="@username" oninput="checkDup()" /></div>
-              <div class="field"><label>Name</label><input type="text" id="fName" placeholder="Full name" /></div>
-            </div>
-            <div class="field-row">
-              <div class="field"><label>Followers</label><input type="text" id="fFollowers" placeholder="e.g. 12.4K" /></div>
-              <div class="field"><label>Firm / Role</label><input type="text" id="fFirm" placeholder="e.g. Paradigm / VC" /></div>
-            </div>
-            <div class="field"><label>Bio</label><textarea id="fBio" placeholder="Paste their Twitter bio here..."></textarea></div>
-            <div class="field"><label>Recent Tweets</label><textarea id="fTweets" placeholder="Paste 3–5 recent tweets..."></textarea></div>
-          </div>
+        <div class="field">
+          <label>Bio</label>
+          <textarea id="fBio" placeholder="Paste their Twitter bio..." style="min-height:60px"></textarea>
         </div>
-
-        <div class="field" style="margin-top:10px">
+        <div class="field">
+          <label>Tweet 1</label>
+          <textarea id="fTweet1" placeholder="Paste a tweet..." style="min-height:52px"></textarea>
+        </div>
+        <div class="field">
+          <label>Tweet 2 <span style="color:#333;font-size:10px;text-transform:none">(optional)</span></label>
+          <textarea id="fTweet2" placeholder="Paste a tweet..." style="min-height:52px"></textarea>
+        </div>
+        <div class="field">
+          <label>Tweet 3 <span style="color:#333;font-size:10px;text-transform:none">(optional)</span></label>
+          <textarea id="fTweet3" placeholder="Paste a tweet..." style="min-height:52px"></textarea>
+        </div>
+        <div class="field">
           <label>Target Platform</label>
           <select id="fTarget">
             <option value="tailtrade">TailTrade (web)</option>
@@ -691,13 +681,7 @@ OUTREACH rules:
 - bettor / kol / no crypto → NEVER mention crypto, perps, or Solana. Use "trade football like stocks" or parlay analogy
 - Be specific to their profile. Max 3 sentences. Sound human.`;
 
-  const content = [
-    ...images.map(img => ({
-      type: 'image_url',
-      image_url: { url: `data:${img.mimeType};base64,${img.base64}` }
-    })),
-    { type: 'text', text: prompt }
-  ];
+  const content = prompt;
 
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -708,8 +692,8 @@ OUTREACH rules:
       'X-Title': 'Prospects'
     },
     body: JSON.stringify({
-      model: 'google/gemma-4-26b-a4b-it:free',
-      messages: [{ role: 'user', content }]
+      model: 'deepseek/deepseek-chat:free',
+      messages: [{ role: 'user', content: [{ type: 'text', text: content }] }]
     })
   });
 
@@ -818,38 +802,33 @@ function sanitizeText(s, max) { return String(s).trim().slice(0, max); }
 
 // ── Manual analyze ──────────────────────────────────────────
 async function analyzeManual() {
-  const handle   = document.getElementById('fHandle').value.trim();
-  const name     = sanitizeText(document.getElementById('fName').value, 100);
-  const followers= sanitizeText(document.getElementById('fFollowers').value, 20);
-  const firm     = sanitizeText(document.getElementById('fFirm').value, 100);
-  const bio      = sanitizeText(document.getElementById('fBio').value, 500);
-  const tweets   = sanitizeText(document.getElementById('fTweets').value, 1000);
-  const target   = document.getElementById('fTarget').value;
+  const handle = document.getElementById('fHandle').value.trim();
+  const bio    = sanitizeText(document.getElementById('fBio').value, 500);
+  const t1     = sanitizeText(document.getElementById('fTweet1').value, 500);
+  const t2     = sanitizeText(document.getElementById('fTweet2').value, 500);
+  const t3     = sanitizeText(document.getElementById('fTweet3').value, 500);
+  const target = document.getElementById('fTarget').value;
 
-  if (!uploadedImages.length && !handle && !bio && !tweets) { showToast('Add at least one screenshot or fill in the fields.', 3000, true); return; }
-  if (handle && !validateHandle(handle)) { showToast('Invalid handle — letters, numbers and _ only.', 3000, true); return; }
+  if (!handle) { showToast('Handle is required.', 2500, true); return; }
+  if (!validateHandle(handle)) { showToast('Invalid handle — letters, numbers and _ only.', 3000, true); return; }
   if (!getKey()) { showToast('API key not configured. Click ⚙ to set it.', 3000, true); return; }
   if (!rateLimitOk()) return;
 
   setLoading(true, 'Analyzing profile...');
   document.getElementById('analyzeBtn').disabled = true;
 
+  const tweets = [t1, t2, t3].filter(Boolean).map((t, i) => `Tweet ${i+1}: ${t}`).join('\n');
   const profileText = [
-    handle && `Handle: ${handle}`,
-    name && `Name: ${name}`,
-    followers && `Followers: ${followers}`,
-    firm && `Firm/Role: ${firm}`,
-    bio && `Bio: ${bio}`,
+    `Handle: ${handle}`,
+    bio    && `Bio: ${bio}`,
     tweets && `Recent Tweets:\n${tweets}`,
   ].filter(Boolean).join('\n');
 
   try {
-    const parsed = await callGeminiWithRetry(profileText, target, uploadedImages);
+    const parsed = await callGeminiWithRetry(profileText, target, []);
     await saveProspect({ ...parsed, handle: handle || parsed.handle, target });
     // clear form
-    ['fHandle','fName','fFollowers','fFirm','fBio','fTweets'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    uploadedImages = [];
-    renderPreviews();
+    ['fHandle','fBio','fTweet1','fTweet2','fTweet3'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     document.getElementById('dupWarning').style.display = 'none';
     showToast('Prospect added!');
   } catch(e) {
