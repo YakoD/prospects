@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prospects — TailTrade</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  header { padding: 20px 32px; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; }
+  .header-left h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-left p { font-size: 11px; color: #444; margin-top: 2px; }
+
+  .stats { display: flex; gap: 10px; }
+  .stat { background: #111; border: 1px solid #1a1a1a; border-radius: 8px; padding: 8px 14px; text-align: center; min-width: 64px; }
+  .stat-num { font-size: 20px; font-weight: 700; }
+  .stat-num.hot { color: #ff4d4d; }
+  .stat-num.warm { color: #ff9900; }
+  .stat-num.lukewarm { color: #4da6ff; }
+  .stat-num.grey { color: #555; }
+  .stat-label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
+
+  .main { max-width: 880px; margin: 0 auto; padding: 24px 20px; }
+
+  /* API Key bar */
+  .settings-bar { background: #111; border: 1px solid #1a1a1a; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+  .settings-bar label { font-size: 11px; color: #444; white-space: nowrap; }
+  .settings-bar input { flex: 1; background: #0d0d0d; border: 1px solid #222; border-radius: 6px; padding: 7px 11px; color: #e0e0e0; font-size: 12px; outline: none; }
+  .settings-bar input:focus { border-color: #333; }
+  .btn-sm { background: #1a1a1a; border: 1px solid #2a2a2a; color: #aaa; border-radius: 6px; padding: 7px 13px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+  .btn-sm:hover { background: #222; color: #ccc; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: #111; border: 1px solid #1a1a1a; border-radius: 8px; padding: 4px; width: fit-content; }
+  .tab { padding: 7px 18px; border-radius: 6px; font-size: 13px; cursor: pointer; color: #555; border: none; background: none; }
+  .tab.active { background: #1e1e1e; color: #e0e0e0; }
+
+  /* Add section */
+  .add-section { background: #111; border: 1px solid #1a1a1a; border-radius: 10px; padding: 18px; margin-bottom: 24px; }
+  .add-section h2 { font-size: 12px; color: #555; margin-bottom: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
+  textarea { width: 100%; background: #0d0d0d; border: 1px solid #222; border-radius: 8px; padding: 11px; color: #e0e0e0; font-size: 13px; resize: vertical; min-height: 100px; outline: none; line-height: 1.5; font-family: inherit; }
+  textarea:focus { border-color: #333; }
+  textarea::placeholder { color: #333; }
+  .add-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+  select { background: #0d0d0d; border: 1px solid #222; border-radius: 6px; padding: 7px 11px; color: #e0e0e0; font-size: 13px; outline: none; cursor: pointer; }
+  .btn-primary { background: #e0e0e0; color: #000; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-primary:hover { background: #fff; }
+  .btn-primary:disabled { background: #2a2a2a; color: #555; cursor: not-allowed; }
+
+  /* CSV section */
+  .csv-section { background: #111; border: 1px solid #1a1a1a; border-radius: 10px; padding: 18px; margin-bottom: 24px; }
+  .csv-section h2 { font-size: 12px; color: #555; margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
+  .csv-section p { font-size: 12px; color: #444; margin-bottom: 12px; line-height: 1.5; }
+  .csv-section code { background: #0d0d0d; border: 1px solid #222; border-radius: 4px; padding: 2px 6px; font-size: 11px; color: #888; }
+  .csv-drop { border: 1px dashed #2a2a2a; border-radius: 8px; padding: 28px; text-align: center; cursor: pointer; transition: border-color 0.15s; }
+  .csv-drop:hover, .csv-drop.drag { border-color: #555; }
+  .csv-drop p { font-size: 13px; color: #444; }
+  .csv-drop span { font-size: 11px; color: #333; display: block; margin-top: 4px; }
+  .csv-drop input[type=file] { display: none; }
+  .csv-progress { margin-top: 14px; display: none; }
+  .progress-bar-bg { background: #1a1a1a; border-radius: 4px; height: 4px; width: 100%; margin-top: 8px; }
+  .progress-bar { background: #e0e0e0; border-radius: 4px; height: 4px; width: 0%; transition: width 0.3s; }
+  .csv-status { font-size: 12px; color: #555; margin-top: 6px; }
+
+  /* Filters & search */
+  .toolbar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+  .search-input { background: #111; border: 1px solid #1a1a1a; border-radius: 8px; padding: 8px 14px; color: #e0e0e0; font-size: 13px; outline: none; flex: 1; min-width: 180px; }
+  .search-input:focus { border-color: #2a2a2a; }
+  .search-input::placeholder { color: #333; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-btn { background: #111; border: 1px solid #1a1a1a; color: #444; border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+  .filter-btn:hover, .filter-btn.active { background: #1a1a1a; border-color: #333; color: #ccc; }
+
+  /* Cards */
+  .prospect-list { display: flex; flex-direction: column; gap: 12px; }
+  .prospect-card { background: #111; border: 1px solid #1a1a1a; border-radius: 12px; padding: 18px; position: relative; }
+  .prospect-card:hover { border-color: #222; }
+  .prospect-card.dmd { opacity: 0.45; }
+
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+  .card-name { font-size: 16px; font-weight: 700; }
+  .card-handle { font-size: 12px; color: #4da6ff; margin-left: 6px; font-weight: 400; }
+  .card-handle a { color: inherit; text-decoration: none; }
+  .card-handle a:hover { text-decoration: underline; }
+
+  .badge { font-size: 10px; font-weight: 700; border-radius: 5px; padding: 3px 9px; letter-spacing: 0.5px; flex-shrink: 0; }
+  .badge.HOT { background: #2d0a0a; color: #ff4d4d; border: 1px solid #4a1010; }
+  .badge.WARM { background: #2d1a00; color: #ff9900; border: 1px solid #4a2e00; }
+  .badge.LUKEWARM { background: #0a1828; color: #4da6ff; border: 1px solid #0e2a44; }
+
+  .card-meta { font-size: 12px; color: #444; margin-bottom: 5px; }
+  .card-interests { margin-bottom: 8px; }
+  .card-interests span.label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 0.8px; margin-right: 5px; }
+  .tag { display: inline-block; background: #161616; border: 1px solid #222; border-radius: 4px; padding: 2px 7px; font-size: 11px; color: #aaa; margin-right: 4px; margin-bottom: 2px; }
+  .tag.type-crypto { color: #c084fc; border-color: #3a1a5a; background: #1a0d2a; }
+  .tag.type-sports { color: #4ade80; border-color: #1a4a2a; background: #0d1f14; }
+  .tag.type-polymarket { color: #f59e0b; border-color: #4a3010; background: #1f1508; }
+
+  .card-bio { font-size: 12px; color: #555; font-style: italic; margin-bottom: 5px; line-height: 1.4; }
+  .card-reason { font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; }
+
+  .pitch-label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .pitch-type { font-size: 10px; padding: 2px 7px; border-radius: 4px; border: 1px solid #2a2a2a; color: #555; }
+  .pitch-type.crypto { color: #c084fc; border-color: #3a1a5a; }
+  .pitch-type.bettor { color: #4ade80; border-color: #1a4a2a; }
+
+  .outreach-box { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 8px; padding: 13px; font-size: 13px; line-height: 1.65; color: #ccc; margin-bottom: 12px; }
+
+  .card-actions { display: flex; gap: 8px; align-items: center; }
+  .btn-copy { background: #1a1a1a; border: 1px solid #2a2a2a; color: #aaa; border-radius: 6px; padding: 6px 13px; font-size: 12px; cursor: pointer; }
+  .btn-copy:hover { background: #222; }
+  .btn-copy.copied { color: #4ade80; border-color: #1a4a2a; }
+  .btn-dmd { background: transparent; border: 1px solid #1e1e1e; color: #444; border-radius: 6px; padding: 6px 13px; font-size: 12px; cursor: pointer; }
+  .btn-dmd:hover { border-color: #2a2a2a; color: #777; }
+  .btn-dmd.done { color: #4ade80; border-color: #1a4a2a; }
+  .btn-delete { background: transparent; border: none; color: #2a2a2a; font-size: 18px; cursor: pointer; margin-left: auto; padding: 2px 8px; border-radius: 4px; line-height: 1; }
+  .btn-delete:hover { color: #ff4d4d; background: #1a0808; }
+
+  .target-pill { font-size: 10px; color: #444; background: #161616; border: 1px solid #1e1e1e; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: #2a2a2a; }
+  .empty-state p { font-size: 14px; }
+
+  /* Loading overlay */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .loading-box { background: #111; border: 1px solid #222; border-radius: 12px; padding: 26px 34px; text-align: center; min-width: 220px; }
+  .spinner { width: 26px; height: 26px; border: 2px solid #222; border-top-color: #e0e0e0; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-box p { color: #666; font-size: 13px; }
+
+  .toast { position: fixed; bottom: 22px; right: 22px; background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; padding: 11px 16px; font-size: 13px; color: #ccc; z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-width: 280px; }
+  .toast.show { opacity: 1; }
+  .toast.error { border-color: #4a1010; color: #ff8080; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>Prospects</h1>
+    <p>TailTrade · KOL Outreach Dashboard</p>
+  </div>
+  <div class="stats" id="statsBar">
+    <div class="stat"><div class="stat-num grey" id="statDmd">0</div><div class="stat-label">DM'd</div></div>
+    <div class="stat"><div class="stat-num" style="color:#e0e0e0" id="statTotal">0</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-num hot" id="statHot">0</div><div class="stat-label">Hot</div></div>
+    <div class="stat"><div class="stat-num warm" id="statWarm">0</div><div class="stat-label">Warm</div></div>
+    <div class="stat"><div class="stat-num lukewarm" id="statLukewarm">0</div><div class="stat-label">Lukewarm</div></div>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="settings-bar">
+    <label>Gemini API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="AIza... (grátis em aistudio.google.com)" />
+    <button class="btn-sm" onclick="saveKey()">Salvar</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('manual', this)">Perfil Manual</button>
+    <button class="tab" onclick="switchTab('csv', this)">Import CSV</button>
+  </div>
+
+  <!-- Manual tab -->
+  <div id="tab-manual" class="add-section">
+    <h2>Adicionar Prospect</h2>
+    <textarea id="profileText" placeholder="Cole o perfil do Twitter: nome, handle, bio, tweets recentes...
+
+Exemplo:
+Nome: @pedrobet99
+Bio: Full-time Polymarket trader. Soccer markets only. 3x roi last month.
+Tweets: 'Going heavy on Brazil -1.5 tonight on Poly...' 'Kalshi soccer vol is crazy rn'"></textarea>
+    <div class="add-row">
+      <select id="targetSelect">
+        <option value="tailtrade">TailTrade (web)</option>
+        <option value="notch">Notch (app)</option>
+        <option value="both">Ambos</option>
+      </select>
+      <button class="btn-primary" id="analyzeBtn" onclick="analyzeProfile()">Analisar & Gerar</button>
+    </div>
+  </div>
+
+  <!-- CSV tab -->
+  <div id="tab-csv" class="csv-section" style="display:none">
+    <h2>Import CSV do Grok</h2>
+    <p>
+      Exporte o resultado do Grok para CSV. Colunas esperadas (qualquer ordem):<br>
+      <code>name</code>, <code>handle</code>, <code>bio</code>, <code>followers</code>, <code>recent_tweets</code> (opcional)<br>
+      Colunas extras são ignoradas. Processa um por um e salva automaticamente.
+    </p>
+    <div class="csv-drop" id="csvDrop" onclick="document.getElementById('csvFile').click()" ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="this.classList.remove('drag')">
+      <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(this.files[0])">
+      <p>Arraste o CSV aqui ou clique para selecionar</p>
+      <span>Máx. 500 perfis por importação</span>
+    </div>
+    <div class="csv-progress" id="csvProgress">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="csv-status" id="csvStatus">Aguardando...</div>
+        <button class="btn-sm" id="csvStopBtn" onclick="stopCSV()" style="display:none">Parar</button>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+    <div class="add-row" style="margin-top:12px">
+      <select id="csvTargetSelect">
+        <option value="tailtrade">TailTrade (web)</option>
+        <option value="notch">Notch (app)</option>
+        <option value="both">Ambos</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, handle..." oninput="renderList()" />
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('HOT',this)">Hot</button>
+      <button class="filter-btn" onclick="setFilter('WARM',this)">Warm</button>
+      <button class="filter-btn" onclick="setFilter('LUKEWARM',this)">Lukewarm</button>
+      <button class="filter-btn" onclick="setFilter('notdmd',this)">Not DM'd</button>
+      <button class="filter-btn" onclick="setFilter('dmd',this)">DM'd</button>
+    </div>
+  </div>
+
+  <div class="prospect-list" id="prospectList"></div>
+  <div class="empty-state" id="emptyState" style="display:none"><p>Nenhum prospect ainda.</p></div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p id="loadingText">Analisando perfil...</p>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let prospects = JSON.parse(localStorage.getItem('prospects_v2') || '[]');
+let currentFilter = 'all';
+let csvAbort = false;
+
+// ── Init ───────────────────────────────────────────────────────────────────
+window.onload = () => {
+  const k = getKey();
+  if (k) document.getElementById('apiKeyInput').value = k;
+  renderList();
+};
+
+// ── API Key ────────────────────────────────────────────────────────────────
+function saveKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if (k) { localStorage.setItem('gemini_key', k); showToast('API Key salva!'); }
+}
+function getKey() { return localStorage.getItem('gemini_key') || ''; }
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-manual').style.display = name === 'manual' ? '' : 'none';
+  document.getElementById('tab-csv').style.display   = name === 'csv'    ? '' : 'none';
+}
+
+// ── Gemini call ────────────────────────────────────────────────────────────
+async function callGemini(profileData, target) {
+  const key = getKey();
+  if (!key) throw new Error('API Key não configurada');
+
+  const targetDesc = {
+    tailtrade: 'TailTrade (web platform, tailtrade.com)',
+    notch:     'Notch (iOS app)',
+    both:      'TailTrade (web) e Notch (iOS app)'
+  }[target] || 'TailTrade';
+
+  const prompt = `You are a growth analyst for TailTrade / Notch — a perpetual derivatives (perps) platform for sports, the first in the world focused on sports teams. No expiry, leverage, funding rates. Live on Solana. Currently in early beta. Web version: TailTrade. iOS app: Notch (non-custodial wallet, legal for US users). Goal: find KOLs and traders to onboard as early testers.
+
+PROFILE:
+${profileData}
+
+TARGET PLATFORM: ${targetDesc}
+
+CLASSIFY the profile and output ONLY valid JSON (no markdown):
+{
+  "name": "Full Name or handle if no name",
+  "handle": "@handle",
+  "firm": "Firm or role, empty string if none",
+  "followers": "follower count as string, empty if unknown",
+  "profile_type": "crypto_trader" or "bettor" or "kol" or "media",
+  "temperature": "HOT" or "WARM" or "LUKEWARM",
+  "temperature_reason": "One sentence why",
+  "interests": ["tag1", "tag2"],
+  "interest_types": ["crypto", "sports", "polymarket"],
+  "bio_summary": "One sentence who they are",
+  "outreach": "Personalized DM — see rules below"
+}
+
+TEMPERATURE rules:
+- HOT: Actively trades Polymarket/Kalshi on soccer/sports AND/OR is a perp/derivatives trader with sports interest → top priority
+- WARM: Perp/futures trader (no sports) OR sports bettor with crypto exposure → worth reaching out
+- LUKEWARM: Sports media, KOL without trading, casual crypto user → long shot
+
+OUTREACH rules (critical):
+- If profile_type is "crypto_trader" or they mention perps/futures/leverage: use technical pitch. Mention perp DEX, no expiry, funding rates, leverage on sports teams. Example angle: "sports teams as an uncorrelated asset class"
+- If profile_type is "bettor" or "kol" (non-crypto): NEVER mention crypto, perps, or Solana. Use: "trade football like stocks" or "parlay analogy: bet on your team across 4 games — if one loses, your money stays, the others make up for it". Invite them to test with their own funds.
+- Always be specific to something in their profile. Max 3 sentences. Sound human, not salesy.
+- End with the platform link naturally if it fits.`;
+
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  raw = raw.replace(/```json|```/g, '').trim();
+  return JSON.parse(raw);
+}
+
+// ── Manual analyze ─────────────────────────────────────────────────────────
+async function analyzeProfile() {
+  const text = document.getElementById('profileText').value.trim();
+  const target = document.getElementById('targetSelect').value;
+  if (!text) { showToast('Cole o perfil primeiro.'); return; }
+  if (!getKey()) { showToast('Insira sua Gemini API Key.'); return; }
+
+  setLoading(true, 'Analisando perfil...');
+  document.getElementById('analyzeBtn').disabled = true;
+
+  try {
+    const parsed = await callGemini(text, target);
+    addProspect(parsed, target);
+    document.getElementById('profileText').value = '';
+    showToast('Prospect adicionado!');
+  } catch(e) {
+    showToast('Erro: ' + e.message, 4000, true);
+    console.error(e);
+  } finally {
+    setLoading(false);
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+}
+
+// ── CSV Import ─────────────────────────────────────────────────────────────
+function onDragOver(e) { e.preventDefault(); document.getElementById('csvDrop').classList.add('drag'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('csvDrop').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleCSV(file);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+  return lines.slice(1).map(line => {
+    const vals = splitCSVLine(line);
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || '').replace(/^"|"$/g, '').trim(); });
+    return obj;
+  }).filter(r => r.handle || r.name);
+}
+
+function splitCSVLine(line) {
+  const result = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+    else cur += c;
+  }
+  result.push(cur);
+  return result;
+}
+
+function rowToProfileText(row) {
+  const parts = [];
+  if (row.name) parts.push(`Nome: ${row.name}`);
+  if (row.handle) parts.push(`Handle: ${row.handle}`);
+  if (row.bio) parts.push(`Bio: ${row.bio}`);
+  if (row.followers) parts.push(`Followers: ${row.followers}`);
+  if (row.firm || row.fund) parts.push(`Firm: ${row.firm || row.fund}`);
+  if (row.recent_tweets || row.tweets) parts.push(`Tweets recentes: ${row.recent_tweets || row.tweets}`);
+  // include any other columns
+  const known = ['name','handle','bio','followers','firm','fund','recent_tweets','tweets'];
+  Object.entries(row).forEach(([k, v]) => {
+    if (!known.includes(k) && v) parts.push(`${k}: ${v}`);
+  });
+  return parts.join('\n');
+}
+
+async function handleCSV(file) {
+  if (!file) return;
+  if (!getKey()) { showToast('Insira sua Gemini API Key primeiro.'); return; }
+
+  const text = await file.text();
+  const rows = parseCSV(text).slice(0, 500);
+  if (!rows.length) { showToast('CSV vazio ou sem colunas válidas.', 3000, true); return; }
+
+  const target = document.getElementById('csvTargetSelect').value;
+  const progressEl = document.getElementById('csvProgress');
+  const progressBar = document.getElementById('progressBar');
+  const statusEl = document.getElementById('csvStatus');
+  const stopBtn = document.getElementById('csvStopBtn');
+
+  progressEl.style.display = 'block';
+  stopBtn.style.display = '';
+  csvAbort = false;
+
+  let done = 0, errors = 0;
+  for (const row of rows) {
+    if (csvAbort) break;
+    const profileText = rowToProfileText(row);
+    statusEl.textContent = `Processando ${done + 1} / ${rows.length} — ${row.handle || row.name || ''}`;
+    progressBar.style.width = `${Math.round((done / rows.length) * 100)}%`;
+
+    try {
+      const parsed = await callGemini(profileText, target);
+      addProspect(parsed, target);
+    } catch(e) {
+      errors++;
+      console.error('Row error:', e.message, row);
+    }
+
+    done++;
+    await sleep(800); // rate limit buffer
+  }
+
+  progressBar.style.width = '100%';
+  statusEl.textContent = csvAbort
+    ? `Parado em ${done} / ${rows.length}${errors ? ` (${errors} erros)` : ''}`
+    : `Concluído: ${done} perfis${errors ? ` (${errors} erros)` : ''}`;
+  stopBtn.style.display = 'none';
+  showToast(`${done - errors} prospects importados!`);
+}
+
+function stopCSV() { csvAbort = true; }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Data ───────────────────────────────────────────────────────────────────
+function addProspect(parsed, target) {
+  prospects.unshift({ id: Date.now() + Math.random(), ...parsed, target, dmd: false, createdAt: new Date().toISOString() });
+  save();
+  renderList();
+}
+
+function save() { localStorage.setItem('prospects_v2', JSON.stringify(prospects)); }
+
+function toggleDmd(id) {
+  const p = prospects.find(x => x.id === id);
+  if (p) { p.dmd = !p.dmd; save(); renderList(); }
+}
+
+function deleteProspect(id) {
+  if (!confirm('Remover este prospect?')) return;
+  prospects = prospects.filter(x => x.id !== id);
+  save(); renderList();
+}
+
+function copyMessage(id, btn) {
+  const p = prospects.find(x => x.id === id);
+  if (!p) return;
+  navigator.clipboard.writeText(p.outreach).then(() => {
+    btn.textContent = 'Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Message'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent    = prospects.length;
+  document.getElementById('statDmd').textContent      = prospects.filter(p => p.dmd).length;
+  document.getElementById('statHot').textContent      = prospects.filter(p => p.temperature === 'HOT').length;
+  document.getElementById('statWarm').textContent     = prospects.filter(p => p.temperature === 'WARM').length;
+  document.getElementById('statLukewarm').textContent = prospects.filter(p => p.temperature === 'LUKEWARM').length;
+}
+
+function renderList() {
+  updateStats();
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let list = [...prospects];
+
+  if (currentFilter === 'HOT')      list = list.filter(p => p.temperature === 'HOT');
+  else if (currentFilter === 'WARM')     list = list.filter(p => p.temperature === 'WARM');
+  else if (currentFilter === 'LUKEWARM') list = list.filter(p => p.temperature === 'LUKEWARM');
+  else if (currentFilter === 'dmd')      list = list.filter(p => p.dmd);
+  else if (currentFilter === 'notdmd')   list = list.filter(p => !p.dmd);
+
+  if (search) list = list.filter(p =>
+    (p.name||'').toLowerCase().includes(search) ||
+    (p.handle||'').toLowerCase().includes(search) ||
+    (p.firm||'').toLowerCase().includes(search)
+  );
+
+  const container = document.getElementById('prospectList');
+  const empty = document.getElementById('emptyState');
+
+  if (!list.length) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  const targetLabel = { tailtrade: 'TailTrade', notch: 'Notch', both: 'TailTrade + Notch' };
+  const pitchTypeLabel = { crypto_trader: 'pitch técnico', bettor: 'pitch bettor', kol: 'pitch KOL', media: 'pitch mídia' };
+  const pitchTypeCls   = { crypto_trader: 'crypto', bettor: 'bettor', kol: 'bettor', media: 'bettor' };
+
+  container.innerHTML = list.map(p => `
+    <div class="prospect-card ${p.dmd ? 'dmd' : ''}">
+      <div class="card-header">
+        <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;">
+          <span class="card-name">${esc(p.name || p.handle || '')}</span>
+          <span class="card-handle">${p.handle ? `<a href="https://x.com/${p.handle.replace('@','')}" target="_blank">${esc(p.handle)}</a>` : ''}</span>
+          ${p.target ? `<span class="target-pill">${targetLabel[p.target] || p.target}</span>` : ''}
+        </div>
+        <span class="badge ${p.temperature}">${p.temperature}</span>
+      </div>
+      ${p.firm ? `<div class="card-meta">${esc(p.firm)}${p.followers ? ' · ' + esc(p.followers) + ' followers' : ''}</div>` : (p.followers ? `<div class="card-meta">${esc(p.followers)} followers</div>` : '')}
+      ${(p.interests||[]).length ? `
+        <div class="card-interests">
+          <span class="label">Interests</span>
+          ${p.interests.map((tag, i) => {
+            const types = p.interest_types || [];
+            const cls = types[i] ? `type-${types[i]}` : '';
+            return `<span class="tag ${cls}">${esc(tag)}</span>`;
+          }).join('')}
+        </div>` : ''}
+      ${p.bio_summary ? `<div class="card-bio">${esc(p.bio_summary)}</div>` : ''}
+      ${p.temperature_reason ? `<div class="card-reason">${esc(p.temperature_reason)}</div>` : ''}
+      <div class="pitch-label">
+        Outreach
+        ${p.profile_type ? `<span class="pitch-type ${pitchTypeCls[p.profile_type]||''}">${pitchTypeLabel[p.profile_type]||p.profile_type}</span>` : ''}
+      </div>
+      <div class="outreach-box">${esc(p.outreach || '')}</div>
+      <div class="card-actions">
+        <button class="btn-copy" onclick="copyMessage(${JSON.stringify(p.id)}, this)">Copy Message</button>
+        <button class="btn-dmd ${p.dmd ? 'done' : ''}" onclick="toggleDmd(${JSON.stringify(p.id)})">${p.dmd ? '✓ DM\'d' : 'Mark DM\'d'}</button>
+        <button class="btn-delete" onclick="deleteProspect(${JSON.stringify(p.id)})" title="Remover">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setLoading(on, text) {
+  document.getElementById('loadingOverlay').style.display = on ? 'flex' : 'none';
+  if (text) document.getElementById('loadingText').textContent = text;
+}
+
+function showToast(msg, duration = 2500, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => { t.className = 'toast'; }, duration);
+}
+</script>
+</body>
+</html>
